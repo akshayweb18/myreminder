@@ -8,6 +8,8 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, onAuthStateChanged, signOut as firebaseSignOut } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
+import { useReminderStore } from '@/stores/reminderStore';
+import { useBpStore } from '@/stores/bpStore';
 
 // ── Auth Context ──────────────────────────────────────────────
 
@@ -39,6 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (!firebaseUser) {
+        // Logged out or no active session -> Reset local Zustand stores immediately
+        // so that data doesn't leak or display when switching accounts
+        useReminderStore.getState().resetStore();
+        useBpStore.getState().resetStore();
+      }
+
       setUser(firebaseUser);
       setLoading(false);
 

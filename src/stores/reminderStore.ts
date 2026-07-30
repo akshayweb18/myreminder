@@ -176,6 +176,7 @@ interface ReminderStore {
   getReminderById: (id: string) => Reminder | undefined;
   clearAllReminders: () => void;
   setRemindersFromCloud: (reminders: Reminder[]) => void;
+  resetStore: () => void;
 }
 
 // ============================================================
@@ -327,6 +328,8 @@ export const useReminderStore = create<ReminderStore>()(
           return { reminders: Array.from(localMap.values()) };
         });
       },
+
+      resetStore: () => set({ reminders: [] }),
     }),
     {
       name: STORAGE_KEYS.REMINDERS,

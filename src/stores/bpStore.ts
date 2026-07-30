@@ -73,6 +73,7 @@ interface BpStore {
   setReminderSettings: (settings: Partial<BpReminderSettings>) => void;
   getStreak: () => number;
   setReadingsFromCloud: (readings: BpReading[]) => void;
+  resetStore: () => void;
 }
 
 // ============================================================
@@ -247,6 +248,8 @@ export const useBpStore = create<BpStore>()(
           return { readings: Array.from(localMap.values()) };
         });
       },
+
+      resetStore: () => set({ readings: [], medicines: [], goal: null }),
     }),
     { name: 'remindme_bp_readings', skipHydration: true },
   ),
