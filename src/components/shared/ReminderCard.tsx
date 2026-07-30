@@ -96,7 +96,7 @@ export function ReminderCard({ reminder, onEdit, compact = false, className }: R
               <div className="relative shrink-0">
                 <button
                   onClick={() => setShowActions(!showActions)}
-                  className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] opacity-0 group-hover:opacity-100 transition-all"
+                  className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all sm:opacity-0 sm:group-hover:opacity-100"
                 >
                   <MoreHorizontal size={16} />
                 </button>

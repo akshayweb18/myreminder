@@ -150,8 +150,8 @@ export default function NewReminderPage() {
         <Button variant="ghost" size="icon" onClick={() => router.back()}>
           <ArrowLeft size={18} />
         </Button>
-        <div>
-          <h1 className="text-2xl font-bold font-display text-[var(--text-primary)]">Create Reminder</h1>
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold font-display text-[var(--text-primary)] truncate">Create Reminder</h1>
           <p className="text-xs text-[var(--text-tertiary)]">Set up smart notifications for anything</p>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function NewReminderPage() {
           </div>
 
           {/* Date, Time & Priority */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             <Input
               type="date"
               label="Date"
@@ -389,11 +389,11 @@ export default function NewReminderPage() {
           </div>
 
           {/* Submit Action */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
-            <Button type="button" variant="ghost" onClick={() => router.back()}>
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+            <Button type="button" variant="ghost" onClick={() => router.back()} className="w-full sm:w-auto">
               Cancel
             </Button>
-            <Button type="submit" variant="gradient" size="lg">
+            <Button type="submit" variant="gradient" size="lg" className="w-full sm:w-auto">
               <Check size={18} /> Create Reminder
             </Button>
           </div>

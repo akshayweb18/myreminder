@@ -17,7 +17,7 @@ interface AppShellProps {
 
 export function AppShell({ children }: AppShellProps) {
   return (
-    <div className="flex h-screen bg-[var(--bg-base)] overflow-hidden">
+    <div className="flex h-[100dvh] bg-[var(--bg-base)] overflow-hidden">
       {/* Sidebar — hidden on mobile */}
       <div className="hidden md:flex h-full">
         <Sidebar />
@@ -28,9 +28,9 @@ export function AppShell({ children }: AppShellProps) {
         {/* Top bar */}
         <TopBar />
 
-        {/* Page content */}
-        <main className="flex-1 overflow-y-auto">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-6">
+        {/* Page content — scrollable, clears fixed bottom nav on mobile */}
+        <main className="flex-1 overflow-y-auto overscroll-contain">
+          <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-6 pb-28 md:pb-8">
             {children}
           </div>
         </main>
@@ -39,7 +39,7 @@ export function AppShell({ children }: AppShellProps) {
       {/* Mobile bottom nav */}
       <BottomNav />
 
-      {/* Global FAB */}
+      {/* Global FAB — desktop only */}
       <FloatingButton className="md:flex hidden" />
 
       {/* Command Palette */}

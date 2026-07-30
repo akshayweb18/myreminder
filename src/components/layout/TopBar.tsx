@@ -42,20 +42,19 @@ export function TopBar({ className }: TopBarProps) {
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 h-16',
-        'flex items-center justify-between px-4 gap-4',
+        'sticky top-0 z-30 h-14 sm:h-16',
+        'flex items-center justify-between px-3 sm:px-4 gap-3',
         'glass-strong border-b border-[var(--border)]',
         className,
       )}
     >
       {/* Left side */}
-      <div className="flex items-center gap-3">
-
+      <div className="flex items-center gap-2 min-w-0">
         <motion.h1
           key={pathname}
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-lg font-bold text-[var(--text-primary)] font-display"
+          className="text-base sm:text-lg font-bold text-[var(--text-primary)] font-display truncate"
         >
           {title}
         </motion.h1>

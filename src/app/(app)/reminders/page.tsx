@@ -82,14 +82,14 @@ export default function RemindersPage() {
   return (
     <div className="space-y-6">
       {/* Header Row */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-display text-[var(--text-primary)]">Reminders</h1>
+          <h1 className="text-xl sm:text-2xl font-bold font-display text-[var(--text-primary)]">Reminders</h1>
           <p className="text-xs text-[var(--text-tertiary)] mt-0.5">
             Manage, filter, and organize all your reminders
           </p>
         </div>
-        <Button onClick={() => router.push('/reminders/new')}>
+        <Button onClick={() => router.push('/reminders/new')} className="w-full sm:w-auto">
           <Plus size={16} /> New Reminder
         </Button>
       </div>
@@ -128,13 +128,13 @@ export default function RemindersPage() {
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as SortOption)}
-              className="h-10 px-3 text-xs bg-[var(--surface-2)] text-[var(--text-primary)] border border-[var(--border)] rounded-xl outline-none cursor-pointer"
+              className="flex-1 sm:flex-none h-10 px-2 text-xs bg-[var(--surface-2)] text-[var(--text-primary)] border border-[var(--border)] rounded-xl outline-none cursor-pointer min-w-0"
             >
-              <option value="dueDate">Sort by Due Date</option>
-              <option value="priority">Sort by Priority</option>
-              <option value="newest">Sort by Newest</option>
-              <option value="oldest">Sort by Oldest</option>
-              <option value="alphabetical">Sort Alphabetically</option>
+              <option value="dueDate">Due Date</option>
+              <option value="priority">Priority</option>
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="alphabetical">A–Z</option>
             </select>
           </div>
         </div>

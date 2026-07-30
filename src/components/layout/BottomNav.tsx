@@ -24,8 +24,11 @@ export function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
       {/* Blur backdrop */}
-      <div className="glass-strong border-t border-[var(--border)]">
-        <div className="flex items-center justify-around px-2 py-2 pb-safe-bottom">
+      <div
+        className="glass-strong border-t border-[var(--border)]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}
+      >
+        <div className="flex items-center justify-around px-1 py-1.5">
           {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + '/');
 
@@ -41,7 +44,7 @@ export function BottomNav() {
                       />
                     )}
                     <Icon
-                      size={22}
+                      size={21}
                       className={cn(
                         'relative z-10 transition-colors',
                         active ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]',
@@ -51,7 +54,7 @@ export function BottomNav() {
                   </div>
                   <span
                     className={cn(
-                      'text-[10px] font-medium transition-colors',
+                      'text-[9px] font-medium transition-colors',
                       active ? 'text-[var(--accent)]' : 'text-[var(--text-tertiary)]',
                     )}
                   >
