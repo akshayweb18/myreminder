@@ -9,13 +9,16 @@ import { BottomNav } from './BottomNav';
 import { TopBar } from './TopBar';
 import { CommandPalette } from './CommandPalette';
 import { FloatingButton } from '@/components/shared/FloatingButton';
-import { cn } from '@/lib/utils';
+import { useFirestoreSync } from '@/hooks/useFirestoreSync';
 
 interface AppShellProps {
   children: React.ReactNode;
 }
 
 export function AppShell({ children }: AppShellProps) {
+  // Start real-time Firestore sync for reminders + BP when user is logged in
+  useFirestoreSync();
+
   return (
     <div className="flex h-[100dvh] bg-[var(--bg-base)] overflow-hidden">
       {/* Sidebar — hidden on mobile */}

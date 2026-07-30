@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { auth } from '@/lib/firebase';
+import { firestoreService } from '@/services/firestoreService';
 
 // ============================================================
 // Types
@@ -70,6 +72,7 @@ interface BpStore {
   setGoal: (goal: BpGoal | null) => void;
   setReminderSettings: (settings: Partial<BpReminderSettings>) => void;
   getStreak: () => number;
+  setReadingsFromCloud: (readings: BpReading[]) => void;
 }
 
 // ============================================================
@@ -141,12 +144,30 @@ export const useBpStore = create<BpStore>()(
           medicinesTaken,
         };
         set((state) => ({ readings: [newReading, ...state.readings] }));
+
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          firestoreService.saveBpReading(userId, newReading);
+        }
       },
 
-      deleteReading: (id) =>
-        set((state) => ({ readings: state.readings.filter((r) => r.id !== id) })),
+      deleteReading: (id) => {
+        set((state) => ({ readings: state.readings.filter((r) => r.id !== id) }));
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          firestoreService.deleteBpReading(userId, id);
+        }
+      },
 
-      clearAll: () => set({ readings: [] }),
+      clearAll: () => {
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          get().readings.forEach((r) => {
+            firestoreService.deleteBpReading(userId, r.id);
+          });
+        }
+        set({ readings: [] });
+      },
 
       addMedicine: (name, dosage, frequency, color) => {
         const now = new Date();
@@ -160,17 +181,34 @@ export const useBpStore = create<BpStore>()(
           active: true,
         };
         set((state) => ({ medicines: [med, ...state.medicines] }));
+
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          firestoreService.saveBpMedicine(userId, med);
+        }
       },
 
-      deleteMedicine: (id) =>
-        set((state) => ({ medicines: state.medicines.filter((m) => m.id !== id) })),
+      deleteMedicine: (id) => {
+        set((state) => ({ medicines: state.medicines.filter((m) => m.id !== id) }));
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          firestoreService.deleteBpMedicine(userId, id);
+        }
+      },
 
-      toggleMedicineActive: (id) =>
-        set((state) => ({
-          medicines: state.medicines.map((m) =>
-            m.id === id ? { ...m, active: !m.active } : m,
-          ),
-        })),
+      toggleMedicineActive: (id) => {
+        set((state) => {
+          const updatedMeds = state.medicines.map((m) =>
+            m.id === id ? { ...m, active: !m.active } : m
+          );
+          const updatedMed = updatedMeds.find((m) => m.id === id);
+          const userId = auth.currentUser?.uid;
+          if (userId && updatedMed) {
+            firestoreService.saveBpMedicine(userId, updatedMed);
+          }
+          return { medicines: updatedMeds };
+        });
+      },
 
       setGoal: (goal) => set({ goal }),
 
@@ -200,6 +238,14 @@ export const useBpStore = create<BpStore>()(
           }
         }
         return streak;
+      },
+
+      setReadingsFromCloud: (cloudReadings) => {
+        set((state) => {
+          const localMap = new Map(state.readings.map((r) => [r.id, r]));
+          cloudReadings.forEach((r) => localMap.set(r.id, r));
+          return { readings: Array.from(localMap.values()) };
+        });
       },
     }),
     { name: 'remindme_bp_readings', skipHydration: true },

@@ -15,6 +15,8 @@ import {
 import { generateId, isReminderOverdue, isDueToday, isReminderUpcoming } from '@/lib/utils';
 import { STORAGE_KEYS } from '@/constants';
 import { format } from 'date-fns';
+import { auth } from '@/lib/firebase';
+import { firestoreService } from '@/services/firestoreService';
 
 // ============================================================
 // Sample Data
@@ -173,6 +175,7 @@ interface ReminderStore {
   getArchivedReminders: () => Reminder[];
   getReminderById: (id: string) => Reminder | undefined;
   clearAllReminders: () => void;
+  setRemindersFromCloud: (reminders: Reminder[]) => void;
 }
 
 // ============================================================
@@ -196,21 +199,38 @@ export const useReminderStore = create<ReminderStore>()(
           updatedAt: new Date().toISOString(),
         };
         set((state) => ({ reminders: [newReminder, ...state.reminders] }));
+
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          firestoreService.saveReminder(userId, newReminder);
+        }
+
         return newReminder;
       },
 
       updateReminder: (id, values) => {
-        set((state) => ({
-          reminders: state.reminders.map((r) =>
-            r.id === id ? { ...r, ...values, updatedAt: new Date().toISOString() } : r,
-          ),
-        }));
+        set((state) => {
+          const updatedReminders = state.reminders.map((r) =>
+            r.id === id ? { ...r, ...values, updatedAt: new Date().toISOString() } : r
+          );
+          const updatedReminder = updatedReminders.find((r) => r.id === id);
+          const userId = auth.currentUser?.uid;
+          if (userId && updatedReminder) {
+            firestoreService.saveReminder(userId, updatedReminder);
+          }
+          return { reminders: updatedReminders };
+        });
       },
 
       deleteReminder: (id) => {
         set((state) => ({
           reminders: state.reminders.filter((r) => r.id !== id),
         }));
+
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          firestoreService.deleteReminder(userId, id);
+        }
       },
 
       completeReminder: (id) => {
@@ -289,7 +309,24 @@ export const useReminderStore = create<ReminderStore>()(
       getReminderById: (id) =>
         get().reminders.find((r) => r.id === id),
 
-      clearAllReminders: () => set({ reminders: [] }),
+      clearAllReminders: () => {
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          get().reminders.forEach((r) => {
+            firestoreService.deleteReminder(userId, r.id);
+          });
+        }
+        set({ reminders: [] });
+      },
+
+      setRemindersFromCloud: (cloudReminders) => {
+        // Merge cloud data, preferring cloud version for existing IDs
+        set((state) => {
+          const localMap = new Map(state.reminders.map((r) => [r.id, r]));
+          cloudReminders.forEach((r) => localMap.set(r.id, r));
+          return { reminders: Array.from(localMap.values()) };
+        });
+      },
     }),
     {
       name: STORAGE_KEYS.REMINDERS,
