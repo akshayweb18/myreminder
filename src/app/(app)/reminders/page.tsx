@@ -20,8 +20,10 @@ import { Dialog, DialogContent } from '@/components/ui/Dialog';
 
 export default function RemindersPage() {
   const router = useRouter();
-  const { reminders, sort, setSort, filter, setFilter, clearFilter, clearAllReminders } = useReminderStore();
+  const { reminders, sort, setSort, filter, setFilter, clearFilter, clearAllReminders, trashReminder } = useReminderStore();
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
+  const [isSelectionMode, setIsSelectionMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'overdue' | 'completed'>('all');
@@ -135,6 +137,18 @@ export default function RemindersPage() {
                   {activeFilterCount}
                 </span>
               )}
+            </Button>
+
+            <Button
+              variant={isSelectionMode ? 'default' : 'secondary'}
+              size="md"
+              onClick={() => {
+                setIsSelectionMode(!isSelectionMode);
+                setSelectedIds([]);
+              }}
+              className="flex-1 sm:flex-initial"
+            >
+              <Check size={14} /> {isSelectionMode ? 'Exit Select' : 'Select'}
             </Button>
 
             {/* Sort Selector */}
@@ -272,6 +286,51 @@ export default function RemindersPage() {
         </div>
       </div>
 
+      {/* Selection Mode Bar */}
+      {isSelectionMode && sorted.length > 0 && (
+        <div className="flex items-center justify-between p-3 rounded-2xl bg-[var(--accent)]/10 border border-[var(--accent)]/20 text-sm text-[var(--text-primary)]">
+          <div className="flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={selectedIds.length === sorted.length && sorted.length > 0}
+              onChange={() => {
+                if (selectedIds.length === sorted.length) {
+                  setSelectedIds([]);
+                } else {
+                  setSelectedIds(sorted.map((r) => r.id));
+                }
+              }}
+              className="h-4.5 w-4.5 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] accent-[var(--accent)] cursor-pointer"
+            />
+            <span className="font-semibold text-xs sm:text-sm">{selectedIds.length} Selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setIsSelectionMode(false);
+                setSelectedIds([]);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              size="sm"
+              disabled={selectedIds.length === 0}
+              onClick={() => {
+                selectedIds.forEach((id) => trashReminder(id));
+                setSelectedIds([]);
+                setIsSelectionMode(false);
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white font-medium gap-1.5"
+            >
+              <Trash2 size={14} /> Delete Selected ({selectedIds.length})
+            </Button>
+          </div>
+        </div>
+      )}
+
       {/* Reminders List */}
       {sorted.length === 0 ? (
         <EmptyState
@@ -291,6 +350,15 @@ export default function RemindersPage() {
                 key={reminder.id}
                 reminder={reminder}
                 onEdit={(r) => router.push(`/reminders/${r.id}`)}
+                isSelectionMode={isSelectionMode}
+                isSelected={selectedIds.includes(reminder.id)}
+                onSelectToggle={() => {
+                  setSelectedIds((prev) =>
+                    prev.includes(reminder.id)
+                      ? prev.filter((id) => id !== reminder.id)
+                      : [...prev, reminder.id]
+                  );
+                }}
               />
             ))}
           </AnimatePresence>

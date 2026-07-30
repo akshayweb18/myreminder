@@ -21,9 +21,20 @@ interface ReminderCardProps {
   onEdit?: (reminder: Reminder) => void;
   compact?: boolean;
   className?: string;
+  isSelectionMode?: boolean;
+  isSelected?: boolean;
+  onSelectToggle?: () => void;
 }
 
-export function ReminderCard({ reminder, onEdit, compact = false, className }: ReminderCardProps) {
+export function ReminderCard({
+  reminder,
+  onEdit,
+  compact = false,
+  className,
+  isSelectionMode = false,
+  isSelected = false,
+  onSelectToggle,
+}: ReminderCardProps) {
   const [showActions, setShowActions] = useState(false);
   const { completeReminder, trashReminder, archiveReminder, restoreReminder } = useReminderStore();
 
@@ -54,12 +65,15 @@ export function ReminderCard({ reminder, onEdit, compact = false, className }: R
       exit={{ opacity: 0, x: -20, scale: 0.95 }}
       whileHover={{ y: -2 }}
       transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+      onClick={isSelectionMode ? onSelectToggle : undefined}
       className={cn(
         'relative group',
         'bg-[var(--surface-1)] border border-[var(--border)]',
         'rounded-2xl overflow-hidden',
         'shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]',
-        'transition-shadow duration-200',
+        'transition-all duration-200',
+        isSelectionMode && 'cursor-pointer border-[var(--accent)]/30',
+        isSelected && 'ring-2 ring-[var(--accent)] border-transparent bg-[var(--accent)]/[0.03]',
         isCompleted && 'opacity-70',
         className,
       )}
@@ -72,6 +86,16 @@ export function ReminderCard({ reminder, onEdit, compact = false, className }: R
 
       <div className="p-4 pl-5">
         <div className="flex items-start gap-3">
+          {isSelectionMode && (
+            <div className="flex items-center justify-center h-10 w-6 shrink-0" onClick={(e) => e.stopPropagation()}>
+              <input
+                type="checkbox"
+                checked={isSelected}
+                onChange={onSelectToggle}
+                className="h-4.5 w-4.5 rounded border-[var(--border)] text-[var(--accent)] focus:ring-[var(--accent)] accent-[var(--accent)] cursor-pointer"
+              />
+            </div>
+          )}
           {/* Category icon */}
           <div
             className="flex items-center justify-center h-10 w-10 rounded-xl text-lg shrink-0"
@@ -93,13 +117,15 @@ export function ReminderCard({ reminder, onEdit, compact = false, className }: R
               </h3>
 
               {/* Actions menu */}
-              <div className="relative shrink-0">
-                <button
-                  onClick={() => setShowActions(!showActions)}
-                  className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all sm:opacity-0 sm:group-hover:opacity-100"
-                >
-                  <MoreHorizontal size={16} />
-                </button>
+              <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+                {!isSelectionMode && (
+                  <button
+                    onClick={() => setShowActions(!showActions)}
+                    className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all sm:opacity-0 sm:group-hover:opacity-100"
+                  >
+                    <MoreHorizontal size={16} />
+                  </button>
+                )}
 
                 <AnimatePresence>
                   {showActions && (
@@ -226,11 +252,11 @@ export function ReminderCard({ reminder, onEdit, compact = false, className }: R
         </div>
 
         {/* Complete button (shown on hover for pending reminders) */}
-        {reminder.status === 'pending' && (
+        {reminder.status === 'pending' && !isSelectionMode && (
           <motion.button
             initial={{ opacity: 0 }}
             whileHover={{ scale: 1.05 }}
-            onClick={() => completeReminder(reminder.id)}
+            onClick={(e) => { e.stopPropagation(); completeReminder(reminder.id); }}
             className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity"
           >
             <div
@@ -243,7 +269,7 @@ export function ReminderCard({ reminder, onEdit, compact = false, className }: R
         )}
 
         {/* Completed check */}
-        {isCompleted && (
+        {isCompleted && !isSelectionMode && (
           <div className="absolute bottom-4 right-4">
             <CheckCircle2 size={18} className="text-emerald-400" />
           </div>
