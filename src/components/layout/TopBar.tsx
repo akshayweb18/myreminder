@@ -5,7 +5,7 @@
 // ============================================================
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Plus } from 'lucide-react';
+import { Bell, Search, Plus, LogOut } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
@@ -14,6 +14,7 @@ import { ThemeSwitcher } from '@/components/shared/ThemeSwitcher';
 import { useIsMounted } from '@/hooks/useIsMounted';
 import { useState } from 'react';
 import { getCategoryById } from '@/constants';
+import { useAuth } from '@/providers/AuthProvider';
 
 const PAGE_TITLES: Record<string, string> = {
   '/dashboard': 'Dashboard',
@@ -36,6 +37,7 @@ export function TopBar({ className }: TopBarProps) {
   const router = useRouter();
   const { toggleCommandPalette } = useUiStore();
   const { getOverdueReminders } = useReminderStore();
+  const { signOut } = useAuth();
   const mounted = useIsMounted();
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -198,6 +200,16 @@ export function TopBar({ className }: TopBarProps) {
             )}
           </AnimatePresence>
         </div>
+
+        {/* Log Out */}
+        <button
+          onClick={signOut}
+          className="p-2 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+          aria-label="Log Out"
+          title="Log Out"
+        >
+          <LogOut size={20} />
+        </button>
 
         {/* New reminder CTA */}
         <button

@@ -9,12 +9,13 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Bell, Calendar, History, Settings,
-  Trash2, User, ChevronLeft, ChevronRight, Plus, Heart,
+  Trash2, User, ChevronLeft, ChevronRight, Plus, Heart, LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
 import { useReminderStore } from '@/stores/reminderStore';
 import { useIsMounted } from '@/hooks/useIsMounted';
+import { useAuth } from '@/providers/AuthProvider';
 
 const NAV_GROUPS = [
   {
@@ -50,6 +51,7 @@ export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebarCollapsed } = useUiStore();
   const { getTodayReminders, getOverdueReminders } = useReminderStore();
+  const { signOut } = useAuth();
   const mounted = useIsMounted();
 
   const todayCount = mounted ? getTodayReminders().length : 0;
@@ -194,15 +196,32 @@ export function Sidebar({ className }: SidebarProps) {
         ))}
       </nav>
 
+      {/* Log Out */}
+      <div className={cn('border-t border-[var(--border)] p-2', sidebarCollapsed && 'flex justify-center')}>
+        <button
+          onClick={signOut}
+          className={cn(
+            'flex items-center gap-2 rounded-xl px-3 py-2 w-full',
+            'text-red-400 hover:bg-red-500/10 hover:text-red-300',
+            'text-sm font-medium transition-colors',
+            sidebarCollapsed && 'justify-center px-2 h-10 w-10',
+          )}
+          title="Log Out"
+        >
+          <LogOut size={18} />
+          {!sidebarCollapsed && <span>Log Out</span>}
+        </button>
+      </div>
+
       {/* Collapse toggle */}
-      <div className={cn('border-t border-[var(--border)] p-3', sidebarCollapsed && 'flex justify-center')}>
+      <div className={cn('border-t border-[var(--border)] p-2', sidebarCollapsed && 'flex justify-center')}>
         <button
           onClick={toggleSidebarCollapsed}
           className={cn(
             'flex items-center gap-2 rounded-xl px-3 py-2 w-full',
             'text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)]',
             'text-sm transition-colors',
-            sidebarCollapsed && 'justify-center px-2',
+            sidebarCollapsed && 'justify-center px-2 h-10 w-10',
           )}
           title={sidebarCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
