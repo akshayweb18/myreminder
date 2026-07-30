@@ -45,6 +45,7 @@ export default function LoginPage() {
       await signInWithEmailAndPassword(auth, email, password);
       router.replace('/dashboard');
     } catch (err: unknown) {
+      console.error('[Login] Error logging in:', err);
       const code = (err as { code?: string }).code ?? '';
       setError(getFirebaseErrorMessage(code));
     } finally {
@@ -59,6 +60,7 @@ export default function LoginPage() {
       await signInWithPopup(auth, googleProvider);
       router.replace('/dashboard');
     } catch (err: unknown) {
+      console.error('[Google Login] Error:', err);
       const code = (err as { code?: string }).code ?? '';
       setError(getFirebaseErrorMessage(code));
     } finally {

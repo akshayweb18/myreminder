@@ -60,6 +60,7 @@ export default function RegisterPage() {
       await createUserProfile(cred.user.uid, name.trim(), email);
       router.replace('/dashboard');
     } catch (err: unknown) {
+      console.error('[Register] Error:', err);
       const code = (err as { code?: string }).code ?? '';
       setError(getFirebaseErrorMessage(code));
     } finally {
@@ -76,6 +77,7 @@ export default function RegisterPage() {
       await createUserProfile(u.uid, u.displayName ?? 'User', u.email ?? '', u.photoURL ?? undefined);
       router.replace('/dashboard');
     } catch (err: unknown) {
+      console.error('[Google SignUp] Error:', err);
       const code = (err as { code?: string }).code ?? '';
       setError(getFirebaseErrorMessage(code));
     } finally {
