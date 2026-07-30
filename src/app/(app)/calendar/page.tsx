@@ -71,9 +71,9 @@ export default function CalendarPage() {
   return (
     <div className="space-y-6">
       {/* Page header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold font-display text-[var(--text-primary)] flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-bold font-display text-[var(--text-primary)] flex items-center gap-2">
             <CalendarDays size={22} className="text-[var(--accent)]" />
             Calendar View
           </h1>
@@ -81,7 +81,7 @@ export default function CalendarPage() {
             Drag and drop reminders to reschedule
           </p>
         </div>
-        <Button onClick={() => router.push('/reminders/new')}>
+        <Button onClick={() => router.push('/reminders/new')} className="w-full sm:w-auto">
           <Plus size={16} /> New Reminder
         </Button>
       </div>

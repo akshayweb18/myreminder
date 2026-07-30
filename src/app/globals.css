@@ -467,6 +467,50 @@ input:focus, textarea:focus, select:focus {
   body {
     padding-bottom: 80px; /* Bottom nav height */
   }
+
+  /* FullCalendar Toolbar Responsiveness */
+  .fc .fc-header-toolbar {
+    flex-direction: column !important;
+    gap: 0.75rem !important;
+    align-items: center !important;
+  }
+
+  .fc .fc-header-toolbar .fc-toolbar-chunk {
+    display: flex !important;
+    justify-content: center !important;
+    flex-wrap: wrap !important;
+    gap: 0.25rem !important;
+    width: 100% !important;
+  }
+
+  /* Display layout order: Title -> Navigation -> View types */
+  .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
+    order: 1 !important;
+  }
+
+  .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(1) {
+    order: 2 !important;
+  }
+
+  .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(3) {
+    order: 3 !important;
+  }
+
+  .fc .fc-toolbar-title {
+    font-size: 1.15rem !important;
+    text-align: center !important;
+  }
+
+  .fc .fc-button {
+    padding: 0.35rem 0.5rem !important;
+    font-size: 11px !important;
+  }
+
+  .fc-button-group {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
 }
 
 /* ============================================================
@@ -475,3 +519,4 @@ input:focus, textarea:focus, select:focus {
 @media print {
   .no-print { display: none !important; }
 }
+
