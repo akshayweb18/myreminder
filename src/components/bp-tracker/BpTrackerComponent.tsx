@@ -356,10 +356,10 @@ export default function BpTrackerComponent() {
         </AnimatePresence>
 
         {/* Tab bar */}
-        <div className="flex bg-[var(--surface-2)] p-1 rounded-xl gap-1 w-fit">
+        <div className="flex bg-[var(--surface-2)] p-1 rounded-xl gap-1 w-full overflow-x-auto scrollbar-none whitespace-nowrap">
           {TABS.map((tab) => (
             <button key={tab.id} onClick={() => setActiveTab(tab.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all ${
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
                 activeTab === tab.id
                   ? 'bg-[var(--accent)] text-white shadow'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
