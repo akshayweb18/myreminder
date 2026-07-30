@@ -220,7 +220,220 @@ export default function BpTrackerComponent() {
     setMedColor(MEDICINE_COLORS[0]); setShowMedForm(false);
   };
 
-  const handlePrint = () => window.print();
+  const generatePDF = () => {
+    if (!readings.length) { alert('No readings to generate a report.'); return; }
+
+    const medMap: Record<string, BpMedicine> = {};
+    medicines.forEach((m) => { medMap[m.id] = m; });
+
+    const sorted = [...readings].sort((a, b) => a.date.localeCompare(b.date));
+    const avgSys   = Math.round(readings.reduce((s, r) => s + r.systolic,  0) / readings.length);
+    const avgDia   = Math.round(readings.reduce((s, r) => s + r.diastolic, 0) / readings.length);
+    const avgPulse = Math.round(readings.reduce((s, r) => s + r.pulse,     0) / readings.length);
+    const avgCat   = getBpCategory(avgSys, avgDia);
+    const bestR    = readings.reduce((b, r) => r.systolic < b.systolic ? r : b);
+    const worstR   = readings.reduce((w, r) => r.systolic > w.systolic ? r : w);
+    const dateRange = `${sorted[0].date} – ${sorted[sorted.length - 1].date}`;
+
+    const statusColor: Record<string, string> = {
+      normal:   '#16a34a', elevated: '#d97706',
+      stage1:   '#ea580c', stage2:   '#dc2626', crisis: '#7c3aed',
+    };
+    const statusBg: Record<string, string> = {
+      normal:   '#f0fdf4', elevated: '#fffbeb',
+      stage1:   '#fff7ed', stage2:   '#fef2f2', crisis: '#f5f3ff',
+    };
+
+    const rowsHTML = [...readings].reverse().map((r, i) => {
+      const medNames = (r.medicinesTaken ?? []).map((id) => medMap[id]?.name ?? id).join(', ');
+      const color = statusColor[r.category] ?? '#64748b';
+      const bg    = statusBg[r.category]    ?? '#f8fafc';
+      return `
+        <tr style="background:${i % 2 === 0 ? '#fff' : '#f8fafc'}">
+          <td style="color:#64748b;text-align:center">${i + 1}</td>
+          <td><strong>${new Date(r.date).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</strong></td>
+          <td style="text-align:center">${r.time}</td>
+          <td style="text-align:center;font-weight:700;color:#1e293b">${r.systolic}</td>
+          <td style="text-align:center;font-weight:700;color:#1e293b">${r.diastolic}</td>
+          <td style="text-align:center">${r.pulse}</td>
+          <td style="text-align:center">
+            <span style="background:${bg};color:${color};padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;border:1px solid ${color}30">
+              ${r.categoryLabel}
+            </span>
+          </td>
+          <td style="text-align:center;text-transform:capitalize;color:#64748b">${r.timeOfDay}</td>
+          <td style="color:#475569;font-size:10px">${medNames || '—'}</td>
+          <td style="color:#64748b;font-size:10px">${r.notes || '—'}</td>
+        </tr>`;
+    }).join('');
+
+    const avgColor = statusColor[avgCat.category] ?? '#64748b';
+    const avgBg    = statusBg[avgCat.category]    ?? '#f8fafc';
+
+    const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>BP Report — ${new Date().toLocaleDateString()}</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', Arial, sans-serif; color: #1e293b; background: #fff; font-size: 12px; }
+
+    /* ── Page ── */
+    @page { size: A4; margin: 14mm 14mm 16mm; }
+    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+
+    /* ── Header ── */
+    .header {
+      background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #6366f1 100%);
+      color: #fff; padding: 28px 32px 22px; border-radius: 16px; margin-bottom: 20px;
+      display: flex; justify-content: space-between; align-items: flex-start;
+    }
+    .header-brand { display: flex; align-items: center; gap: 14px; }
+    .header-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      background: rgba(255,255,255,0.2); backdrop-filter: blur(4px);
+      display: flex; align-items: center; justify-content: center; font-size: 28px;
+    }
+    .header-title { font-size: 24px; font-weight: 800; letter-spacing: -0.5px; }
+    .header-sub { font-size: 12px; opacity: 0.8; margin-top: 2px; }
+    .header-meta { text-align: right; font-size: 11px; opacity: 0.85; line-height: 1.7; }
+    .header-meta strong { opacity: 1; font-weight: 600; }
+
+    /* ── Stats Grid ── */
+    .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+    .stat-card {
+      border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 14px 16px;
+      background: linear-gradient(135deg, #f8fafc, #fff);
+    }
+    .stat-card.accent { border-color: #bfdbfe; background: linear-gradient(135deg, #eff6ff, #fff); }
+    .stat-label { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
+    .stat-value { font-size: 22px; font-weight: 800; color: #0f172a; line-height: 1; }
+    .stat-unit  { font-size: 10px; color: #94a3b8; font-weight: 500; margin-top: 2px; }
+
+    /* ── Section Title ── */
+    .section-title {
+      font-size: 11px; font-weight: 700; color: #1e40af; text-transform: uppercase;
+      letter-spacing: 0.1em; margin-bottom: 10px; margin-top: 22px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .section-title::after { content: ''; flex: 1; height: 1.5px; background: linear-gradient(to right, #bfdbfe, transparent); }
+
+    /* ── Highlight Cards ── */
+    .highlights { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 0; }
+    .hl-card { border-radius: 10px; padding: 12px 16px; border: 1.5px solid; }
+    .hl-card .hl-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; opacity: 0.7; }
+    .hl-card .hl-val { font-size: 20px; font-weight: 800; margin-top: 4px; }
+    .hl-card .hl-sub { font-size: 10px; opacity: 0.65; margin-top: 2px; }
+
+    /* ── Table ── */
+    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    thead tr { background: linear-gradient(90deg, #1e40af, #3b82f6); color: #fff; }
+    th { padding: 9px 10px; font-weight: 600; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; }
+    td { padding: 8px 10px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    tbody tr:hover { background: #f0f9ff !important; }
+
+    /* ── Footer ── */
+    .footer {
+      margin-top: 24px; padding: 14px 18px; border-radius: 10px;
+      background: #fff8f0; border: 1.5px solid #fed7aa;
+      font-size: 10px; color: #92400e; line-height: 1.6;
+    }
+    .footer strong { color: #b45309; }
+    .print-note { text-align: center; color: #94a3b8; font-size: 10px; margin-top: 12px; }
+  </style>
+</head>
+<body>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-brand">
+      <div class="header-icon">🩺</div>
+      <div>
+        <div class="header-title">Blood Pressure Report</div>
+        <div class="header-sub">RemindMe AI · Personal Health Tracker</div>
+      </div>
+    </div>
+    <div class="header-meta">
+      <div><strong>Generated:</strong> ${new Date().toLocaleString('en-IN')}</div>
+      <div><strong>Total Readings:</strong> ${readings.length}</div>
+      <div><strong>Date Range:</strong> ${dateRange}</div>
+    </div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card accent">
+      <div class="stat-label">Avg Systolic</div>
+      <div class="stat-value">${avgSys}</div>
+      <div class="stat-unit">mmHg</div>
+    </div>
+    <div class="stat-card accent">
+      <div class="stat-label">Avg Diastolic</div>
+      <div class="stat-value">${avgDia}</div>
+      <div class="stat-unit">mmHg</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Avg Pulse</div>
+      <div class="stat-value">${avgPulse}</div>
+      <div class="stat-unit">bpm</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-label">Overall Status</div>
+      <div class="stat-value" style="font-size:14px;margin-top:4px">
+        <span style="background:${avgBg};color:${avgColor};padding:4px 10px;border-radius:20px;font-size:12px;font-weight:700;border:1px solid ${avgColor}30">
+          ${avgCat.label}
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Best / Worst -->
+  <div class="section-title">Reading Highlights</div>
+  <div class="highlights" style="margin-bottom:0">
+    <div class="hl-card" style="border-color:#86efac;background:#f0fdf4;color:#166534">
+      <div class="hl-label">✅ Best Reading (Lowest Systolic)</div>
+      <div class="hl-val">${bestR.systolic}/${bestR.diastolic} <span style="font-size:12px;font-weight:500">mmHg</span></div>
+      <div class="hl-sub">${new Date(bestR.date).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})} · ${bestR.time} · ${bestR.categoryLabel}</div>
+    </div>
+    <div class="hl-card" style="border-color:#fca5a5;background:#fef2f2;color:#991b1b">
+      <div class="hl-label">⚠️ Highest Reading (Max Systolic)</div>
+      <div class="hl-val">${worstR.systolic}/${worstR.diastolic} <span style="font-size:12px;font-weight:500">mmHg</span></div>
+      <div class="hl-sub">${new Date(worstR.date).toLocaleDateString('en-IN',{day:'2-digit',month:'long',year:'numeric'})} · ${worstR.time} · ${worstR.categoryLabel}</div>
+    </div>
+  </div>
+
+  <!-- Readings Table -->
+  <div class="section-title">Detailed Readings Log</div>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th><th>Date</th><th style="text-align:center">Time</th>
+        <th style="text-align:center">Sys (mmHg)</th><th style="text-align:center">Dia (mmHg)</th>
+        <th style="text-align:center">Pulse</th><th style="text-align:center">BP Status</th>
+        <th style="text-align:center">Time of Day</th><th>Medicines</th><th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>${rowsHTML}</tbody>
+  </table>
+
+  <!-- Footer -->
+  <div class="footer">
+    <strong>⚠️ Medical Disclaimer:</strong> This report is generated from self-logged data using RemindMe AI and is intended for personal reference and sharing with healthcare providers only. It does not constitute medical advice. Always consult a qualified doctor or healthcare professional for diagnosis and treatment.
+  </div>
+  <div class="print-note">RemindMe AI — Blood Pressure Report · ${new Date().toLocaleDateString('en-IN')}</div>
+
+  <script>window.onload = () => { window.print(); }</script>
+</body>
+</html>`;
+
+    const win = window.open('', '_blank', 'width=900,height=700');
+    if (win) {
+      win.document.write(html);
+      win.document.close();
+    }
+  };
 
   const TABS: { id: TabId; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <Activity size={15} /> },
@@ -378,8 +591,8 @@ export default function BpTrackerComponent() {
             <Button variant="ghost" size="sm" onClick={() => exportCSV(readings, medicines)} title="Export CSV">
               <Download size={14} /> CSV
             </Button>
-            <Button variant="ghost" size="sm" onClick={handlePrint} title="Doctor Report">
-              <Printer size={14} /> Report
+            <Button variant="ghost" size="sm" onClick={generatePDF} title="Doctor PDF Report">
+              <Printer size={14} /> PDF Report
             </Button>
             <Button size="sm" onClick={() => { setShowForm(!showForm); setActiveTab('overview'); }}>
               <Plus size={14} /> Log Reading
