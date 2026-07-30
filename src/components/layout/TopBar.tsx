@@ -5,7 +5,7 @@
 // ============================================================
 
 import { motion } from 'framer-motion';
-import { Bell, Search, Menu, Plus } from 'lucide-react';
+import { Bell, Search, Plus } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
@@ -32,7 +32,7 @@ interface TopBarProps {
 export function TopBar({ className }: TopBarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { toggleCommandPalette, toggleSidebarCollapsed } = useUiStore();
+  const { toggleCommandPalette } = useUiStore();
   const { getOverdueReminders } = useReminderStore();
   const mounted = useIsMounted();
 
@@ -50,14 +50,6 @@ export function TopBar({ className }: TopBarProps) {
     >
       {/* Left side */}
       <div className="flex items-center gap-3">
-        {/* Mobile menu toggle */}
-        <button
-          onClick={toggleSidebarCollapsed}
-          className="md:hidden p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
-          aria-label="Toggle menu"
-        >
-          <Menu size={20} />
-        </button>
 
         <motion.h1
           key={pathname}
