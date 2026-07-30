@@ -6,7 +6,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, ArrowUpDown, Plus, SlidersHorizontal, Check } from 'lucide-react';
+import { Search, Filter, ArrowUpDown, Plus, SlidersHorizontal, Check, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useReminderStore } from '@/stores/reminderStore';
 import { ReminderCard } from '@/components/shared/ReminderCard';
@@ -16,10 +16,12 @@ import { Input } from '@/components/ui/Input';
 import { CATEGORIES, PRIORITIES } from '@/constants';
 import { Priority, SortOption, ReminderStatus } from '@/types';
 import { cn } from '@/lib/utils';
+import { Dialog, DialogContent } from '@/components/ui/Dialog';
 
 export default function RemindersPage() {
   const router = useRouter();
-  const { reminders, sort, setSort, filter, setFilter, clearFilter } = useReminderStore();
+  const { reminders, sort, setSort, filter, setFilter, clearFilter, clearAllReminders } = useReminderStore();
+  const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<'all' | 'pending' | 'overdue' | 'completed'>('all');
@@ -89,9 +91,20 @@ export default function RemindersPage() {
             Manage, filter, and organize all your reminders
           </p>
         </div>
-        <Button onClick={() => router.push('/reminders/new')} className="w-full sm:w-auto">
-          <Plus size={16} /> New Reminder
-        </Button>
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          {reminders.length > 0 && (
+            <Button
+              variant="secondary"
+              onClick={() => setShowDeleteAllConfirm(true)}
+              className="flex-1 sm:flex-initial text-red-500 hover:text-white hover:bg-red-500 border border-red-500/20 transition-all gap-1.5"
+            >
+              <Trash2 size={16} /> Delete All
+            </Button>
+          )}
+          <Button onClick={() => router.push('/reminders/new')} className="flex-1 sm:flex-initial">
+            <Plus size={16} /> New Reminder
+          </Button>
+        </div>
       </div>
 
       {/* Controls Bar */}
@@ -283,6 +296,34 @@ export default function RemindersPage() {
           </AnimatePresence>
         </div>
       )}
+      {/* Confirmation Dialog */}
+      <Dialog open={showDeleteAllConfirm} onOpenChange={setShowDeleteAllConfirm}>
+        <DialogContent
+          title="Delete All Reminders?"
+          description="Are you sure you want to delete all reminders? This will clear all pending, completed, and archived reminders permanently. This action cannot be undone."
+        >
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-3 pt-4 border-t border-[var(--border)]">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setShowDeleteAllConfirm(false)}
+              className="w-full sm:w-auto"
+            >
+              Cancel
+            </Button>
+            <Button
+              type="button"
+              onClick={() => {
+                clearAllReminders();
+                setShowDeleteAllConfirm(false);
+              }}
+              className="w-full sm:w-auto bg-red-600 hover:bg-red-700 text-white font-medium shadow-lg hover:shadow-red-900/10"
+            >
+              Delete All
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

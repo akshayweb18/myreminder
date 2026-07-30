@@ -172,6 +172,7 @@ interface ReminderStore {
   getTrashedReminders: () => Reminder[];
   getArchivedReminders: () => Reminder[];
   getReminderById: (id: string) => Reminder | undefined;
+  clearAllReminders: () => void;
 }
 
 // ============================================================
@@ -287,6 +288,8 @@ export const useReminderStore = create<ReminderStore>()(
 
       getReminderById: (id) =>
         get().reminders.find((r) => r.id === id),
+
+      clearAllReminders: () => set({ reminders: [] }),
     }),
     {
       name: STORAGE_KEYS.REMINDERS,
