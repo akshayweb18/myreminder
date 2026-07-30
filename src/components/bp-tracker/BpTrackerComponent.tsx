@@ -30,18 +30,76 @@ import { format, parseISO, subDays } from 'date-fns';
 const MEDICINE_COLORS = ['#6366f1','#ec4899','#10b981','#f59e0b','#06b6d4','#a855f7','#f97316'];
 const TOD_LABELS = { morning: '🌅 Morning', afternoon: '☀️ Afternoon', evening: '🌇 Evening', night: '🌙 Night' };
 
-function exportCSV(readings: BpReading[]) {
-  const header = 'Date,Time,Systolic,Diastolic,Pulse,Status,Time Of Day,Notes\n';
-  const rows = readings
-    .map((r) =>
-      `${r.date},${r.time},${r.systolic},${r.diastolic},${r.pulse},"${r.categoryLabel}","${r.timeOfDay}","${r.notes ?? ''}"`,
-    )
-    .join('\n');
-  const blob = new Blob([header + rows], { type: 'text/csv' });
+function esc(val: string | number | undefined) {
+  const s = String(val ?? '');
+  return `"${s.replace(/"/g, '""')}"`;
+}
+
+function exportCSV(readings: BpReading[], medicines: BpMedicine[]) {
+  if (!readings.length) { alert('No readings to export.'); return; }
+
+  // Build a medicines lookup map
+  const medMap: Record<string, string> = {};
+  medicines.forEach((m) => { medMap[m.id] = m.name; });
+
+  // ── Summary Stats ─────────────────────────────────────────
+  const avgSys   = Math.round(readings.reduce((s, r) => s + r.systolic,  0) / readings.length);
+  const avgDia   = Math.round(readings.reduce((s, r) => s + r.diastolic, 0) / readings.length);
+  const avgPulse = Math.round(readings.reduce((s, r) => s + r.pulse,     0) / readings.length);
+  const bestR  = readings.reduce((b, r) => r.systolic < b.systolic ? r : b);
+  const worstR = readings.reduce((w, r) => r.systolic > w.systolic ? r : w);
+
+  const lines: string[] = [];
+
+  // BOM so Excel opens UTF-8 correctly
+  const BOM = '\uFEFF';
+
+  // ── Report Header ─────────────────────────────────────────
+  lines.push(`${esc('BLOOD PRESSURE REPORT')},${esc('RemindMe AI')}`);
+  lines.push(`${esc('Generated')},${esc(new Date().toLocaleString())}`);
+  lines.push(`${esc('Total Readings')},${esc(readings.length)}`);
+  lines.push(`${esc('Date Range')},${esc(`${[...readings].sort((a,b)=>a.date.localeCompare(b.date))[0].date} to ${[...readings].sort((a,b)=>a.date.localeCompare(b.date)).at(-1)!.date}`)}`);
+  lines.push('');
+
+  // ── Average Summary ────────────────────────────────────────
+  lines.push(`${esc('SUMMARY')},`);
+  lines.push(`${esc('Average Systolic')},${esc(`${avgSys} mmHg`)}`);
+  lines.push(`${esc('Average Diastolic')},${esc(`${avgDia} mmHg`)}`);
+  lines.push(`${esc('Average Pulse')},${esc(`${avgPulse} bpm`)}`);
+  lines.push(`${esc('Best Reading (Lowest Systolic)')},${esc(`${bestR.systolic}/${bestR.diastolic} mmHg on ${bestR.date}`)}`);
+  lines.push(`${esc('Highest Reading')},${esc(`${worstR.systolic}/${worstR.diastolic} mmHg on ${worstR.date}`)}`);
+  lines.push('');
+
+  // ── Detailed Readings ──────────────────────────────────────
+  lines.push(`${esc('DETAILED READINGS')},`);
+  lines.push([
+    esc('No.'), esc('Date'), esc('Time'),
+    esc('Systolic (mmHg)'), esc('Diastolic (mmHg)'), esc('Pulse (bpm)'),
+    esc('BP Status'), esc('Time of Day'),
+    esc('Medicines Taken'), esc('Notes'),
+  ].join(','));
+
+  [...readings].reverse().forEach((r, idx) => {
+    const medNames = (r.medicinesTaken ?? []).map((id) => medMap[id] ?? id).join('; ');
+    lines.push([
+      esc(idx + 1),
+      esc(new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })),
+      esc(r.time),
+      esc(r.systolic),
+      esc(r.diastolic),
+      esc(r.pulse),
+      esc(r.categoryLabel),
+      esc(r.timeOfDay.charAt(0).toUpperCase() + r.timeOfDay.slice(1)),
+      esc(medNames || '—'),
+      esc(r.notes || '—'),
+    ].join(','));
+  });
+
+  const blob = new Blob([BOM + lines.join('\r\n')], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `bp-records-${new Date().toISOString().split('T')[0]}.csv`;
+  a.download = `bp-report-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -173,40 +231,128 @@ export default function BpTrackerComponent() {
 
   return (
     <>
-      {/* ── Print-only doctor report ────────────────────────── */}
+      {/* ── Print-only doctor report ─────────────────────── */}
       <div id="bp-print-report" className="hidden" ref={printRef}>
         <style>{`
           @media print {
             body > * { display: none !important; }
-            #bp-print-report { display: block !important; font-family: sans-serif; padding: 24px; color: #000; }
-            #bp-print-report table { width: 100%; border-collapse: collapse; }
-            #bp-print-report th, #bp-print-report td { border: 1px solid #ccc; padding: 6px 10px; font-size: 11px; }
-            #bp-print-report th { background: #f3f4f6; }
+            #bp-print-report {
+              display: block !important;
+              font-family: 'Segoe UI', Arial, sans-serif;
+              padding: 32px;
+              color: #111;
+              background: #fff;
+            }
+            .bp-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; border-bottom: 3px solid #3b82f6; padding-bottom: 16px; }
+            .bp-clinic-name { font-size: 22px; font-weight: 800; color: #1e40af; }
+            .bp-subtitle { font-size: 11px; color: #64748b; margin-top: 2px; }
+            .bp-meta { text-align: right; font-size: 11px; color: #64748b; }
+            .bp-stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 24px; }
+            .bp-stat-card { border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px; background: #f8fafc; }
+            .bp-stat-label { font-size: 10px; color: #64748b; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+            .bp-stat-value { font-size: 20px; font-weight: 800; color: #1e293b; margin-top: 4px; }
+            .bp-stat-unit { font-size: 10px; color: #94a3b8; font-weight: 500; }
+            .section-title { font-size: 13px; font-weight: 700; color: #1e40af; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 10px; margin-top: 20px; border-left: 4px solid #3b82f6; padding-left: 8px; }
+            table { width: 100%; border-collapse: collapse; font-size: 11px; }
+            thead tr { background: #1e40af; color: #fff; }
+            th { padding: 8px 10px; font-weight: 600; text-align: left; }
+            tbody tr:nth-child(odd) { background: #f8fafc; }
+            tbody tr:nth-child(even) { background: #fff; }
+            td { padding: 7px 10px; border-bottom: 1px solid #e2e8f0; vertical-align: middle; }
+            .status-normal   { color: #16a34a; font-weight: 700; }
+            .status-elevated { color: #d97706; font-weight: 700; }
+            .status-stage1   { color: #ea580c; font-weight: 700; }
+            .status-stage2   { color: #dc2626; font-weight: 700; }
+            .status-crisis   { color: #7f1d1d; font-weight: 700; background: #fef2f2; }
+            .bp-footer { margin-top: 24px; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 10px; color: #94a3b8; }
           }
         `}</style>
-        <h1 style={{ fontSize: 22, fontWeight: 700 }}>🩺 Blood Pressure Report</h1>
-        <p style={{ color: '#555', marginBottom: 16 }}>Generated: {new Date().toLocaleString()}</p>
+
+        {/* Header */}
+        <div className="bp-header">
+          <div>
+            <div className="bp-clinic-name">🩺 Blood Pressure Report</div>
+            <div className="bp-subtitle">Generated by RemindMe AI · Health Tracker</div>
+          </div>
+          <div className="bp-meta">
+            <div><strong>Date:</strong> {new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' })}</div>
+            <div><strong>Time:</strong> {new Date().toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
+            <div><strong>Total Readings:</strong> {readings.length}</div>
+          </div>
+        </div>
+
+        {/* Summary Stats */}
+        {readings.length > 0 && (() => {
+          const avgSys   = Math.round(readings.reduce((s, r) => s + r.systolic,  0) / readings.length);
+          const avgDia   = Math.round(readings.reduce((s, r) => s + r.diastolic, 0) / readings.length);
+          const avgPulse = Math.round(readings.reduce((s, r) => s + r.pulse,     0) / readings.length);
+          const bestR    = readings.reduce((b, r) => r.systolic < b.systolic ? r : b);
+          const worstR   = readings.reduce((w, r) => r.systolic > w.systolic ? r : w);
+          return (
+            <>
+              <div className="section-title">Summary Statistics</div>
+              <div className="bp-stats-grid">
+                <div className="bp-stat-card">
+                  <div className="bp-stat-label">Avg Systolic</div>
+                  <div className="bp-stat-value">{avgSys} <span className="bp-stat-unit">mmHg</span></div>
+                </div>
+                <div className="bp-stat-card">
+                  <div className="bp-stat-label">Avg Diastolic</div>
+                  <div className="bp-stat-value">{avgDia} <span className="bp-stat-unit">mmHg</span></div>
+                </div>
+                <div className="bp-stat-card">
+                  <div className="bp-stat-label">Avg Pulse</div>
+                  <div className="bp-stat-value">{avgPulse} <span className="bp-stat-unit">bpm</span></div>
+                </div>
+                <div className="bp-stat-card">
+                  <div className="bp-stat-label">Total Readings</div>
+                  <div className="bp-stat-value">{readings.length}</div>
+                </div>
+                <div className="bp-stat-card">
+                  <div className="bp-stat-label">Best Reading</div>
+                  <div className="bp-stat-value" style={{ fontSize: 14 }}>{bestR.systolic}/{bestR.diastolic}</div>
+                  <div className="bp-stat-unit">{bestR.date}</div>
+                </div>
+                <div className="bp-stat-card">
+                  <div className="bp-stat-label">Highest Reading</div>
+                  <div className="bp-stat-value" style={{ fontSize: 14, color: '#dc2626' }}>{worstR.systolic}/{worstR.diastolic}</div>
+                  <div className="bp-stat-unit">{worstR.date}</div>
+                </div>
+              </div>
+            </>
+          );
+        })()}
+
+        {/* Detailed Table */}
+        <div className="section-title">Detailed Readings</div>
         <table>
           <thead>
             <tr>
-              <th>Date</th><th>Time</th><th>Systolic</th><th>Diastolic</th>
-              <th>Pulse</th><th>Status</th><th>Notes</th>
+              <th>#</th><th>Date</th><th>Time</th>
+              <th>Systolic</th><th>Diastolic</th><th>Pulse</th>
+              <th>BP Status</th><th>Time of Day</th><th>Notes</th>
             </tr>
           </thead>
           <tbody>
-            {[...readings].reverse().map((r) => (
+            {[...readings].reverse().map((r, idx) => (
               <tr key={r.id}>
-                <td>{format(parseISO(r.date), 'MMM d, yyyy')}</td>
+                <td>{idx + 1}</td>
+                <td><strong>{format(parseISO(r.date), 'dd MMM yyyy')}</strong></td>
                 <td>{r.time}</td>
-                <td><b>{r.systolic} mmHg</b></td>
-                <td><b>{r.diastolic} mmHg</b></td>
+                <td><strong>{r.systolic} mmHg</strong></td>
+                <td><strong>{r.diastolic} mmHg</strong></td>
                 <td>{r.pulse} bpm</td>
-                <td style={{ color: r.categoryColor, fontWeight: 600 }}>{r.categoryLabel}</td>
-                <td>{r.notes ?? '—'}</td>
+                <td className={`status-${r.category}`}>{r.categoryLabel}</td>
+                <td style={{ textTransform: 'capitalize' }}>{r.timeOfDay}</td>
+                <td>{r.notes || '—'}</td>
               </tr>
             ))}
           </tbody>
         </table>
+
+        <div className="bp-footer">
+          ⚠️ This report is generated from self-logged data and is intended for personal reference only. Always consult a qualified healthcare professional for medical advice, diagnosis, or treatment.
+        </div>
       </div>
 
       {/* ── Main UI ─────────────────────────────────────────── */}
@@ -229,7 +375,7 @@ export default function BpTrackerComponent() {
             )}
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button variant="ghost" size="sm" onClick={() => exportCSV(readings)} title="Export CSV">
+            <Button variant="ghost" size="sm" onClick={() => exportCSV(readings, medicines)} title="Export CSV">
               <Download size={14} /> CSV
             </Button>
             <Button variant="ghost" size="sm" onClick={handlePrint} title="Doctor Report">
