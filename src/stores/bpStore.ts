@@ -1,0 +1,208 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+
+// ============================================================
+// Types
+// ============================================================
+
+export type BpTimeOfDay = 'morning' | 'afternoon' | 'evening' | 'night';
+
+export interface BpReading {
+  id: string;
+  systolic: number;
+  diastolic: number;
+  pulse: number;
+  date: string; // yyyy-MM-dd
+  time: string; // HH:mm
+  notes?: string;
+  category: 'normal' | 'elevated' | 'stage1' | 'stage2' | 'crisis';
+  categoryLabel: string;
+  categoryColor: string;
+  timeOfDay: BpTimeOfDay;
+  medicinesTaken: string[]; // medicine IDs
+}
+
+export interface BpMedicine {
+  id: string;
+  name: string;
+  dosage: string;
+  frequency: 'once-daily' | 'twice-daily' | 'as-needed';
+  color: string;
+  startDate: string;
+  active: boolean;
+}
+
+export interface BpGoal {
+  systolic: number;
+  diastolic: number;
+}
+
+export interface BpReminderSettings {
+  enabled: boolean;
+  morningTime: string; // HH:mm
+  eveningTime: string; // HH:mm
+}
+
+// ============================================================
+// Store Interface
+// ============================================================
+
+interface BpStore {
+  readings: BpReading[];
+  medicines: BpMedicine[];
+  goal: BpGoal | null;
+  reminderSettings: BpReminderSettings;
+
+  addReading: (
+    systolic: number,
+    diastolic: number,
+    pulse: number,
+    notes?: string,
+    medicinesTaken?: string[],
+  ) => void;
+  deleteReading: (id: string) => void;
+  clearAll: () => void;
+
+  addMedicine: (name: string, dosage: string, frequency: BpMedicine['frequency'], color: string) => void;
+  deleteMedicine: (id: string) => void;
+  toggleMedicineActive: (id: string) => void;
+
+  setGoal: (goal: BpGoal | null) => void;
+  setReminderSettings: (settings: Partial<BpReminderSettings>) => void;
+  getStreak: () => number;
+}
+
+// ============================================================
+// Helpers
+// ============================================================
+
+export function getBpCategory(sys: number, dia: number): {
+  category: BpReading['category'];
+  label: string;
+  color: string;
+} {
+  if (sys > 180 || dia > 120) {
+    return { category: 'crisis', label: 'Hypertensive Crisis', color: '#dc2626' };
+  }
+  if (sys >= 140 || dia >= 90) {
+    return { category: 'stage2', label: 'Hypertension Stage 2', color: '#ef4444' };
+  }
+  if ((sys >= 130 && sys <= 139) || (dia >= 80 && dia <= 89)) {
+    return { category: 'stage1', label: 'Hypertension Stage 1', color: '#f97316' };
+  }
+  if (sys >= 120 && sys <= 129 && dia < 80) {
+    return { category: 'elevated', label: 'Elevated BP', color: '#eab308' };
+  }
+  return { category: 'normal', label: 'Normal BP', color: '#10b981' };
+}
+
+export function getTimeOfDay(time: string): BpTimeOfDay {
+  const hour = parseInt(time.split(':')[0], 10);
+  if (hour >= 5 && hour < 12) return 'morning';
+  if (hour >= 12 && hour < 17) return 'afternoon';
+  if (hour >= 17 && hour < 21) return 'evening';
+  return 'night';
+}
+
+// ============================================================
+// Store
+// ============================================================
+
+export const useBpStore = create<BpStore>()(
+  persist(
+    (set, get) => ({
+      readings: [],
+      medicines: [],
+      goal: null,
+      reminderSettings: {
+        enabled: false,
+        morningTime: '08:00',
+        eveningTime: '18:00',
+      },
+
+      addReading: (systolic, diastolic, pulse, notes, medicinesTaken = []) => {
+        const { category, label, color } = getBpCategory(systolic, diastolic);
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const time = now.toTimeString().slice(0, 5);
+
+        const newReading: BpReading = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`,
+          systolic,
+          diastolic,
+          pulse,
+          date,
+          time,
+          notes,
+          category,
+          categoryLabel: label,
+          categoryColor: color,
+          timeOfDay: getTimeOfDay(time),
+          medicinesTaken,
+        };
+        set((state) => ({ readings: [newReading, ...state.readings] }));
+      },
+
+      deleteReading: (id) =>
+        set((state) => ({ readings: state.readings.filter((r) => r.id !== id) })),
+
+      clearAll: () => set({ readings: [] }),
+
+      addMedicine: (name, dosage, frequency, color) => {
+        const now = new Date();
+        const med: BpMedicine = {
+          id: `med-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+          name,
+          dosage,
+          frequency,
+          color,
+          startDate: now.toISOString().split('T')[0],
+          active: true,
+        };
+        set((state) => ({ medicines: [med, ...state.medicines] }));
+      },
+
+      deleteMedicine: (id) =>
+        set((state) => ({ medicines: state.medicines.filter((m) => m.id !== id) })),
+
+      toggleMedicineActive: (id) =>
+        set((state) => ({
+          medicines: state.medicines.map((m) =>
+            m.id === id ? { ...m, active: !m.active } : m,
+          ),
+        })),
+
+      setGoal: (goal) => set({ goal }),
+
+      setReminderSettings: (settings) =>
+        set((state) => ({
+          reminderSettings: { ...state.reminderSettings, ...settings },
+        })),
+
+      getStreak: () => {
+        const { readings } = get();
+        if (readings.length === 0) return 0;
+
+        const uniqueDates = [...new Set(readings.map((r) => r.date))].sort().reverse();
+        const today = new Date().toISOString().split('T')[0];
+
+        let streak = 0;
+        let checkDate = today;
+
+        for (const date of uniqueDates) {
+          if (date === checkDate) {
+            streak++;
+            const prev = new Date(checkDate);
+            prev.setDate(prev.getDate() - 1);
+            checkDate = prev.toISOString().split('T')[0];
+          } else if (date < checkDate) {
+            break;
+          }
+        }
+        return streak;
+      },
+    }),
+    { name: 'remindme_bp_readings', skipHydration: true },
+  ),
+);
+
