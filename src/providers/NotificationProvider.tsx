@@ -103,6 +103,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 badge: '/icons/icon-96.png',
                 // Keep silent: false (default) so standard native OS sound plays
                 silent: !settings.notifications.sound,
+                vibrate: [200, 100, 200, 100, 200],
                 data: {
                   reminderId: reminder.id,
                   url: '/dashboard',
@@ -112,6 +113,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                   { action: 'snooze', title: '⏰ Snooze 15m' },
                 ],
               } as any);
+              if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+              }
             }).catch(() => {
               // Fallback to standard window Notification if SW is not ready/supported
               new Notification(title, { 
@@ -119,6 +123,9 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                 icon: '/icons/icon-192.png',
                 silent: !settings.notifications.sound,
               });
+              if ('vibrate' in navigator) {
+                navigator.vibrate([200, 100, 200, 100, 200]);
+              }
             });
           }
         }
@@ -151,9 +158,23 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
       const fireNotification = (title: string, body: string, tag: string) => {
         navigator.serviceWorker.ready
           .then((reg) => {
-            reg.showNotification(title, { body, tag, icon: '/icons/icon-192.png', silent: false });
+            reg.showNotification(title, {
+              body,
+              tag,
+              icon: '/icons/icon-192.png',
+              silent: false,
+              vibrate: [200, 100, 200, 100, 200],
+            } as any);
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200, 100, 200]);
+            }
           })
-          .catch(() => new Notification(title, { body }));
+          .catch(() => {
+            new Notification(title, { body });
+            if ('vibrate' in navigator) {
+              navigator.vibrate([200, 100, 200, 100, 200]);
+            }
+          });
       };
 
       // Helper: check if currentTime is within a 10-minute window of targetTime

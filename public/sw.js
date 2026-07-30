@@ -125,6 +125,7 @@ self.addEventListener('push', (event) => {
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-96.png',
       tag: data.tag ?? 'remindme',
+      vibrate: [200, 100, 200, 100, 200],
       data: data.data ?? {},
       actions: [
         { action: 'done', title: '✅ Done' },
