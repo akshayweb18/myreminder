@@ -69,7 +69,7 @@ export function ReminderCard({
       className={cn(
         'relative group',
         'bg-[var(--surface-1)] border border-[var(--border)]',
-        'rounded-2xl overflow-hidden',
+        'rounded-2xl',
         'shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]',
         'transition-all duration-200',
         isSelectionMode && 'cursor-pointer border-[var(--accent)]/30',
@@ -129,13 +129,18 @@ export function ReminderCard({
 
                 <AnimatePresence>
                   {showActions && (
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: -5 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: -5 }}
-                      className="absolute right-0 top-8 z-10 w-44 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-xl)] overflow-hidden"
-                      onMouseLeave={() => setShowActions(false)}
-                    >
+                    <>
+                      {/* Click-outside backdrop */}
+                      <div
+                        className="fixed inset-0 z-40"
+                        onClick={() => setShowActions(false)}
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: -5 }}
+                        className="absolute right-0 top-8 z-50 w-44 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-xl)]"
+                      >
                       {reminder.status === 'pending' && (
                         <>
                           <button
@@ -174,7 +179,8 @@ export function ReminderCard({
                       >
                         <Trash2 size={14} /> Delete
                       </button>
-                    </motion.div>
+                      </motion.div>
+                    </>
                   )}
                 </AnimatePresence>
               </div>
