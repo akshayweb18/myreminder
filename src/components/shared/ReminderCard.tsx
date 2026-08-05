@@ -68,6 +68,7 @@ export function ReminderCard({
       onClick={isSelectionMode ? onSelectToggle : undefined}
       className={cn(
         'relative group',
+        showActions ? 'z-30' : 'z-10',
         'bg-[var(--surface-1)] border border-[var(--border)]',
         'rounded-2xl',
         'shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]',
