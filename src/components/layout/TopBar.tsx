@@ -1,11 +1,13 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Top Bar Component
+// RemindMe AI — Top Bar Component (PWA Mobile-First)
+// Mobile: App logo + title left, bell + avatar right (minimal)
+// Desktop: Full layout with search, theme switcher, logout
 // ============================================================
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, Search, Plus, LogOut } from 'lucide-react';
+import { Bell, Search, Plus, LogOut, ChevronLeft } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
@@ -17,57 +19,88 @@ import { getCategoryById } from '@/constants';
 import { useAuth } from '@/providers/AuthProvider';
 
 const PAGE_TITLES: Record<string, string> = {
-  '/dashboard': 'Dashboard',
-  '/reminders': 'Reminders',
+  '/dashboard':     'Dashboard',
+  '/reminders':     'Reminders',
   '/reminders/new': 'New Reminder',
-  '/calendar': 'Calendar',
-  '/bp-tracker': 'BP Tracker',
-  '/history': 'History',
-  '/trash': 'Trash',
-  '/settings': 'Settings',
-  '/profile': 'Profile',
+  '/calendar':      'Calendar',
+  '/bp-tracker':    'BP Tracker',
+  '/history':       'History',
+  '/trash':         'Trash',
+  '/settings':      'Settings',
+  '/profile':       'Profile',
 };
+
+// Pages that should show a back-chevron instead of logo on mobile
+const DETAIL_PAGES = ['/reminders/new', '/profile'];
 
 interface TopBarProps {
   className?: string;
 }
 
 export function TopBar({ className }: TopBarProps) {
-  const pathname = usePathname();
-  const router = useRouter();
+  const pathname  = usePathname();
+  const router    = useRouter();
   const { toggleCommandPalette } = useUiStore();
   const { getOverdueReminders } = useReminderStore();
-  const { signOut } = useAuth();
-  const mounted = useIsMounted();
+  const { signOut, user } = useAuth();
+  const mounted   = useIsMounted();
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const title = PAGE_TITLES[pathname] ?? 'RemindMe AI';
+  const title        = PAGE_TITLES[pathname] ?? 'RemindMe AI';
   const overdueCount = mounted ? getOverdueReminders().length : 0;
+  const isDetail     = DETAIL_PAGES.some((p) => pathname.startsWith(p));
+
+  // User avatar fallback
+  const avatarLetter = user?.displayName?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? 'U';
+  const avatarUrl    = user?.photoURL ?? null;
 
   return (
     <header
       className={cn(
-        'sticky top-0 z-30 h-14 sm:h-16',
-        'flex items-center justify-between px-3 sm:px-4 gap-3',
+        'sticky top-0 z-30',
+        'flex items-center justify-between gap-2',
         'glass-strong border-b border-[var(--border)]',
+        // Mobile: compact height; desktop: taller
+        'h-14 px-3 sm:h-16 sm:px-4',
         className,
       )}
+      style={{ paddingTop: 'env(safe-area-inset-top, 0px)' }}
     >
-      {/* Left side */}
+      {/* ── LEFT ── */}
       <div className="flex items-center gap-2 min-w-0">
+
+        {/* Back button on detail pages (mobile) */}
+        {isDetail ? (
+          <button
+            onClick={() => router.back()}
+            className="sm:hidden -ml-1 p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+            aria-label="Back"
+          >
+            <ChevronLeft size={22} />
+          </button>
+        ) : (
+          /* App icon — mobile only */
+          <div className="sm:hidden h-8 w-8 rounded-xl bg-gradient-to-br from-[var(--accent)] to-purple-500 flex items-center justify-center shadow-md shadow-[var(--accent-glow)] shrink-0">
+            <span className="text-base">🔔</span>
+          </div>
+        )}
+
+        {/* Page title — animates on route change */}
         <motion.h1
           key={pathname}
-          initial={{ opacity: 0, y: -10 }}
+          initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.2 }}
           className="text-base sm:text-lg font-bold text-[var(--text-primary)] font-display truncate"
         >
           {title}
         </motion.h1>
       </div>
 
-      {/* Right side */}
-      <div className="flex items-center gap-2">
-        {/* Search */}
+      {/* ── RIGHT ── */}
+      <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+
+        {/* Desktop search pill */}
         <button
           onClick={toggleCommandPalette}
           className={cn(
@@ -82,28 +115,31 @@ export function TopBar({ className }: TopBarProps) {
         >
           <Search size={14} />
           <span>Search...</span>
-          <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-3)] text-[var(--text-tertiary)] font-mono">
-            ⌘K
-          </kbd>
+          <kbd className="text-[10px] px-1.5 py-0.5 rounded bg-[var(--surface-3)] text-[var(--text-tertiary)] font-mono">⌘K</kbd>
         </button>
 
         {/* Mobile search icon */}
         <button
           onClick={toggleCommandPalette}
-          className="sm:hidden p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+          className="sm:hidden p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors active:scale-95"
+          aria-label="Search"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
         >
           <Search size={20} />
         </button>
 
-        {/* Theme switcher */}
-        <ThemeSwitcher compact />
+        {/* Desktop theme switcher */}
+        <div className="hidden sm:block">
+          <ThemeSwitcher compact />
+        </div>
 
-        {/* Notifications */}
+        {/* Notification bell */}
         <div className="relative">
           <button
             onClick={() => setShowNotifications(!showNotifications)}
-            className="relative p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors"
+            className="relative p-2 rounded-xl text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-colors active:scale-95"
             aria-label="Notifications"
+            style={{ WebkitTapHighlightColor: 'transparent' }}
           >
             <Bell size={20} />
             {mounted && overdueCount > 0 && (
@@ -120,7 +156,6 @@ export function TopBar({ className }: TopBarProps) {
           <AnimatePresence>
             {showNotifications && (
               <>
-                {/* Backdrop */}
                 <div
                   className="fixed inset-0 z-40"
                   onClick={() => setShowNotifications(false)}
@@ -159,10 +194,7 @@ export function TopBar({ className }: TopBarProps) {
                         return (
                           <button
                             key={r.id}
-                            onClick={() => {
-                              router.push(`/reminders/${r.id}`);
-                              setShowNotifications(false);
-                            }}
+                            onClick={() => { router.push(`/reminders/${r.id}`); setShowNotifications(false); }}
                             className="w-full flex items-center gap-3 px-4 py-3 hover:bg-[var(--bg-hover)] transition-colors text-left"
                           >
                             <div
@@ -184,7 +216,6 @@ export function TopBar({ className }: TopBarProps) {
                     )}
                   </div>
 
-                  {/* Footer */}
                   {mounted && overdueCount > 0 && (
                     <div className="px-4 py-2.5 border-t border-[var(--border)]">
                       <button
@@ -201,17 +232,17 @@ export function TopBar({ className }: TopBarProps) {
           </AnimatePresence>
         </div>
 
-        {/* Log Out */}
+        {/* Desktop logout */}
         <button
           onClick={signOut}
-          className="p-2 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
+          className="hidden sm:flex p-2 rounded-xl text-red-400 hover:bg-red-500/10 hover:text-red-300 transition-colors"
           aria-label="Log Out"
           title="Log Out"
         >
           <LogOut size={20} />
         </button>
 
-        {/* New reminder CTA */}
+        {/* Desktop new reminder CTA */}
         <button
           onClick={() => router.push('/reminders/new')}
           className={cn(
@@ -224,6 +255,23 @@ export function TopBar({ className }: TopBarProps) {
         >
           <Plus size={16} />
           New
+        </button>
+
+        {/* Mobile — user avatar (taps to Profile/Settings) */}
+        <button
+          onClick={() => router.push('/profile')}
+          className="sm:hidden ml-0.5 h-8 w-8 rounded-full overflow-hidden border-2 border-[var(--accent)]/40 shrink-0 active:scale-95 transition-transform"
+          aria-label="Profile"
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+        >
+          {avatarUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={avatarUrl} alt="avatar" className="h-full w-full object-cover" />
+          ) : (
+            <div className="h-full w-full bg-gradient-to-br from-[var(--accent)] to-purple-500 flex items-center justify-center text-white text-xs font-bold">
+              {avatarLetter}
+            </div>
+          )}
         </button>
       </div>
     </header>

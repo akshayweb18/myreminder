@@ -140,6 +140,8 @@
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;
+  /* Eliminate tap delay on all elements for native-app feel */
+  touch-action: manipulation;
 }
 
 html {
@@ -149,6 +151,9 @@ html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
+  /* Prevent font size change on device orientation change */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 body {
@@ -159,6 +164,10 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   transition: background-color var(--transition-base), color var(--transition-base);
+  /* Prevent rubber-band scroll on iOS — critical for PWA standalone feel */
+  overscroll-behavior: none;
+  /* Remove 300ms tap delay on Android */
+  touch-action: manipulation;
 }
 
 /* ============================================================
@@ -177,6 +186,16 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: var(--text-tertiary);
+}
+
+/* Hide scrollbar on mobile — cleaner PWA feel */
+@media (max-width: 768px) {
+  ::-webkit-scrollbar {
+    display: none;
+  }
+  * {
+    scrollbar-width: none;
+  }
 }
 
 /* ============================================================
@@ -465,7 +484,14 @@ input:focus, textarea:focus, select:focus {
    ============================================================ */
 @media (max-width: 768px) {
   body {
-    padding-bottom: 80px; /* Bottom nav height */
+    /* Extra bottom padding so content is never hidden behind the bottom nav */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Prevent card lift animation on touch — feels unnatural */
+  .card:hover {
+    transform: none;
+    box-shadow: var(--shadow-md);
   }
 
   /* FullCalendar Toolbar Responsiveness */
@@ -483,7 +509,6 @@ input:focus, textarea:focus, select:focus {
     width: 100% !important;
   }
 
-  /* Display layout order: Title -> Navigation -> View types */
   .fc .fc-header-toolbar .fc-toolbar-chunk:nth-child(2) {
     order: 1 !important;
   }
