@@ -123,6 +123,8 @@ export default function BpTrackerComponent() {
   const [pulse, setPulse] = useState(72);
   const [notes, setNotes] = useState('');
   const [selectedMeds, setSelectedMeds] = useState<string[]>([]);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Chart timeframe
   const [timeframe, setTimeframe] = useState<'7days' | '30days' | '1year'>('7days');
@@ -206,10 +208,28 @@ export default function BpTrackerComponent() {
   );
 
   // Handlers
-  const handleLogSubmit = (e: React.FormEvent) => {
+  const handleLogSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    addReading(systolic, diastolic, pulse, notes.trim(), selectedMeds);
-    setNotes(''); setSelectedMeds([]); setShowForm(false);
+    setSaveError(null);
+    setIsSaving(true);
+    try {
+      const err = await addReading(systolic, diastolic, pulse, notes.trim(), selectedMeds);
+      if (err) {
+        // Cloud sync failed — reading is saved locally, but warn the user
+        setSaveError(err);
+        // Keep form open so the user can see the error
+        setIsSaving(false);
+        return;
+      }
+      // Success — reset form
+      setNotes(''); setSelectedMeds([]); setShowForm(false); setSaveError(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      console.error('[BpTracker] handleLogSubmit unexpected error:', msg);
+      setSaveError(`Unexpected error: ${msg}`);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleMedSubmit = (e: React.FormEvent) => {
@@ -703,10 +723,31 @@ export default function BpTrackerComponent() {
                     </div>
                   </div>
 
+                  {/* Error banner — shown when cloud sync fails */}
+                  {saveError && (
+                    <div className="md:col-span-3 p-3 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-2">
+                      <AlertTriangle size={16} className="text-red-400 shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold text-red-400">Cloud Sync Failed</p>
+                        <p className="text-xs text-red-300/80 mt-0.5">{saveError}</p>
+                        <p className="text-xs text-[var(--text-tertiary)] mt-1">
+                          Your reading was saved locally. Sign in or check your internet connection to sync.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
                   {/* Actions */}
                   <div className="md:col-span-3 flex justify-end gap-2">
-                    <Button variant="ghost" type="button" size="sm" onClick={() => setShowForm(false)}>Cancel</Button>
-                    <Button type="submit" size="sm">Save Reading</Button>
+                    <Button variant="ghost" type="button" size="sm" onClick={() => { setShowForm(false); setSaveError(null); }}>Cancel</Button>
+                    <Button type="submit" size="sm" disabled={isSaving}>
+                      {isSaving ? (
+                        <span className="flex items-center gap-1.5">
+                          <span className="h-3 w-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                          Saving…
+                        </span>
+                      ) : 'Save Reading'}
+                    </Button>
                   </div>
                 </div>
               </form>

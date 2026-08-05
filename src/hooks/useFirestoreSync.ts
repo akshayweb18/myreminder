@@ -2,20 +2,20 @@
 
 // ============================================================
 // RemindMe AI — Firestore Sync Hook
-// Listens to Firestore real-time updates and keeps Zustand
-// stores in sync when the user is logged in.
+// Listens to Firestore real-time updates and keeps the
+// reminders Zustand store in sync when the user is logged in.
+//
+// NOTE: BP data is synced via useBpSync (RTDB) — not here.
 // ============================================================
 
 import { useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
 import { firestoreService } from '@/services/firestoreService';
 import { useReminderStore } from '@/stores/reminderStore';
-import { useBpStore } from '@/stores/bpStore';
 
 export function useFirestoreSync() {
   const { user } = useAuth();
   const setRemindersFromCloud = useReminderStore((s) => s.setRemindersFromCloud);
-  const setBpReadingsFromCloud = useBpStore((s) => s.setReadingsFromCloud);
 
   useEffect(() => {
     if (!user) return;
@@ -27,16 +27,8 @@ export function useFirestoreSync() {
       }
     });
 
-    // Subscribe to BP readings real-time
-    const unsubBp = firestoreService.subscribeToBloodPressure(user.uid, (readings) => {
-      if (readings.length > 0) {
-        setBpReadingsFromCloud(readings);
-      }
-    });
-
     return () => {
       unsubReminders();
-      unsubBp();
     };
-  }, [user, setRemindersFromCloud, setBpReadingsFromCloud]);
+  }, [user, setRemindersFromCloud]);
 }

@@ -10,6 +10,7 @@ import { auth } from '@/lib/firebase';
 import { useRouter, usePathname } from 'next/navigation';
 import { useReminderStore } from '@/stores/reminderStore';
 import { useBpStore } from '@/stores/bpStore';
+import { useBpSync } from '@/hooks/useBpSync';
 
 // ── Auth Context ──────────────────────────────────────────────
 
@@ -39,6 +40,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const pathname = usePathname();
 
+  // Subscribe to RTDB for real-time BP data sync
+  useBpSync();
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       if (!firebaseUser) {

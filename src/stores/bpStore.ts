@@ -1,7 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { auth } from '@/lib/firebase';
-import { firestoreService } from '@/services/firestoreService';
+import {
+  saveBpReading,
+  deleteBpReading,
+  saveBpMedicine,
+  deleteBpMedicine,
+} from '@/services/rtdbService';
 
 // ============================================================
 // Types
@@ -61,7 +66,7 @@ interface BpStore {
     pulse: number,
     notes?: string,
     medicinesTaken?: string[],
-  ) => void;
+  ) => Promise<string | null>; // returns error message or null
   deleteReading: (id: string) => void;
   clearAll: () => void;
 
@@ -73,6 +78,7 @@ interface BpStore {
   setReminderSettings: (settings: Partial<BpReminderSettings>) => void;
   getStreak: () => number;
   setReadingsFromCloud: (readings: BpReading[]) => void;
+  setMedicinesFromCloud: (medicines: BpMedicine[]) => void;
   resetStore: () => void;
 }
 
@@ -124,7 +130,7 @@ export const useBpStore = create<BpStore>()(
         eveningTime: '18:00',
       },
 
-      addReading: (systolic, diastolic, pulse, notes, medicinesTaken = []) => {
+      addReading: async (systolic, diastolic, pulse, notes, medicinesTaken = []) => {
         const { category, label, color } = getBpCategory(systolic, diastolic);
         const now = new Date();
         const date = now.toISOString().split('T')[0];
@@ -144,19 +150,33 @@ export const useBpStore = create<BpStore>()(
           timeOfDay: getTimeOfDay(time),
           medicinesTaken,
         };
+
+        // Save locally first so UI updates immediately
         set((state) => ({ readings: [newReading, ...state.readings] }));
 
         const userId = auth.currentUser?.uid;
-        if (userId) {
-          firestoreService.saveBpReading(userId, newReading);
+        if (!userId) {
+          const errMsg = 'Not signed in — BP reading saved locally only. Sign in to sync to cloud.';
+          console.warn('[BpStore] addReading:', errMsg);
+          return errMsg;
         }
+
+        // Persist to Realtime Database
+        const err = await saveBpReading(userId, newReading);
+        if (err) {
+          console.error('[BpStore] RTDB saveBpReading failed:', err);
+          return `Cloud sync failed: ${err}`;
+        }
+        return null;
       },
 
       deleteReading: (id) => {
         set((state) => ({ readings: state.readings.filter((r) => r.id !== id) }));
         const userId = auth.currentUser?.uid;
         if (userId) {
-          firestoreService.deleteBpReading(userId, id);
+          deleteBpReading(userId, id).catch((err) =>
+            console.error('[BpStore] deleteBpReading error:', err),
+          );
         }
       },
 
@@ -164,7 +184,9 @@ export const useBpStore = create<BpStore>()(
         const userId = auth.currentUser?.uid;
         if (userId) {
           get().readings.forEach((r) => {
-            firestoreService.deleteBpReading(userId, r.id);
+            deleteBpReading(userId, r.id).catch((err) =>
+              console.error('[BpStore] clearAll deleteBpReading error:', err),
+            );
           });
         }
         set({ readings: [] });
@@ -185,7 +207,9 @@ export const useBpStore = create<BpStore>()(
 
         const userId = auth.currentUser?.uid;
         if (userId) {
-          firestoreService.saveBpMedicine(userId, med);
+          saveBpMedicine(userId, med).catch((err) =>
+            console.error('[BpStore] addMedicine error:', err),
+          );
         }
       },
 
@@ -193,7 +217,9 @@ export const useBpStore = create<BpStore>()(
         set((state) => ({ medicines: state.medicines.filter((m) => m.id !== id) }));
         const userId = auth.currentUser?.uid;
         if (userId) {
-          firestoreService.deleteBpMedicine(userId, id);
+          deleteBpMedicine(userId, id).catch((err) =>
+            console.error('[BpStore] deleteMedicine error:', err),
+          );
         }
       },
 
@@ -205,7 +231,9 @@ export const useBpStore = create<BpStore>()(
           const updatedMed = updatedMeds.find((m) => m.id === id);
           const userId = auth.currentUser?.uid;
           if (userId && updatedMed) {
-            firestoreService.saveBpMedicine(userId, updatedMed);
+            saveBpMedicine(userId, updatedMed).catch((err) =>
+              console.error('[BpStore] toggleMedicineActive error:', err),
+            );
           }
           return { medicines: updatedMeds };
         });
@@ -249,9 +277,16 @@ export const useBpStore = create<BpStore>()(
         });
       },
 
+      setMedicinesFromCloud: (cloudMedicines) => {
+        set((state) => {
+          const localMap = new Map(state.medicines.map((m) => [m.id, m]));
+          cloudMedicines.forEach((m) => localMap.set(m.id, m));
+          return { medicines: Array.from(localMap.values()) };
+        });
+      },
+
       resetStore: () => set({ readings: [], medicines: [], goal: null }),
     }),
     { name: 'remindme_bp_readings', skipHydration: true },
   ),
 );
-
