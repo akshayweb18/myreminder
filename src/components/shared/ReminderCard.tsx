@@ -4,7 +4,7 @@
 // RemindMe AI — ReminderCard Component
 // ============================================================
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2, Clock, MoreHorizontal, Trash2,
@@ -37,6 +37,21 @@ export function ReminderCard({
 }: ReminderCardProps) {
   const [showActions, setShowActions] = useState(false);
   const { completeReminder, trashReminder, archiveReminder, restoreReminder } = useReminderStore();
+
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showActions) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setShowActions(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showActions]);
 
   const category = getCategoryById(reminder.categoryId);
   const priorityConfig = getPriorityConfig(reminder.priority);
@@ -118,7 +133,7 @@ export function ReminderCard({
               </h3>
 
               {/* Actions menu */}
-              <div className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
+              <div ref={menuRef} className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
                 {!isSelectionMode && (
                   <button
                     onClick={() => setShowActions(!showActions)}
@@ -131,11 +146,6 @@ export function ReminderCard({
                 <AnimatePresence>
                   {showActions && (
                     <>
-                      {/* Click-outside backdrop */}
-                      <div
-                        className="fixed inset-0 z-40"
-                        onClick={() => setShowActions(false)}
-                      />
                       <motion.div
                         initial={{ opacity: 0, scale: 0.9, y: -5 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
