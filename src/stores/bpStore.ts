@@ -152,8 +152,12 @@ export const useBpStore = create<BpStore>()(
           medicinesTaken,
         };
 
-        // Save locally first so UI updates immediately
-        set((state) => ({ readings: [newReading, ...state.readings] }));
+        // Save locally first so UI updates immediately (sorted latest first)
+        set((state) => {
+          const list = [newReading, ...state.readings];
+          list.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+          return { readings: list };
+        });
 
         const userId = auth.currentUser?.uid;
         if (!userId) {
@@ -195,6 +199,8 @@ export const useBpStore = create<BpStore>()(
             };
             return updatedReading;
           });
+          // Sort readings so that editing date/time automatically moves the record to its correct sorted position
+          updatedReadings.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
           return { readings: updatedReadings };
         });
 
@@ -301,7 +307,9 @@ export const useBpStore = create<BpStore>()(
         set((state) => {
           const localMap = new Map(state.readings.map((r) => [r.id, r]));
           cloudReadings.forEach((r) => localMap.set(r.id, r));
-          return { readings: Array.from(localMap.values()) };
+          const list = Array.from(localMap.values());
+          list.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time));
+          return { readings: list };
         });
       },
 
