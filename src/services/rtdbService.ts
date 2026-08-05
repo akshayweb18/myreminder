@@ -50,7 +50,9 @@ const remindersRef = (uid: string): DatabaseReference             => ref(rtdb, `
 
 async function writeNode(dbRef: DatabaseReference, data: object): Promise<string | null> {
   try {
-    await set(dbRef, data);
+    // Strip undefined values to prevent Firebase RTDB SDK from throwing error
+    const cleanedData = JSON.parse(JSON.stringify(data));
+    await set(dbRef, cleanedData);
     return null;
   } catch (err) {
     const msg = err instanceof Error ? err.message : String(err);

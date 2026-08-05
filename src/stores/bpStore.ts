@@ -182,26 +182,29 @@ export const useBpStore = create<BpStore>()(
       },
 
       updateReading: (id, patch) => {
+        let updatedReading: BpReading | undefined;
+
         set((state) => {
           const updatedReadings = state.readings.map((r) => {
             if (r.id !== id) return r;
             const newTime = patch.time ?? r.time;
-            const updated: BpReading = {
+            updatedReading = {
               ...r,
               ...patch,
               timeOfDay: getTimeOfDay(newTime),
             };
-            // Persist to RTDB
-            const userId = auth.currentUser?.uid;
-            if (userId) {
-              saveBpReading(userId, updated).catch((err) =>
-                console.error('[BpStore] updateReading RTDB error:', err),
-              );
-            }
-            return updated;
+            return updatedReading;
           });
           return { readings: updatedReadings };
         });
+
+        // Persist to RTDB outside the state updater
+        const userId = auth.currentUser?.uid;
+        if (userId && updatedReading) {
+          saveBpReading(userId, updatedReading).catch((err) =>
+            console.error('[BpStore] updateReading RTDB error:', err),
+          );
+        }
       },
 
 
