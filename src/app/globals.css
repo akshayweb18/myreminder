@@ -460,6 +460,16 @@ input:focus, textarea:focus, select:focus {
   transition: all var(--transition-fast) !important;
 }
 
+.fc-button-group {
+  gap: 6px !important;
+}
+
+.fc-button-group > .fc-button {
+  border-radius: var(--radius-md) !important;
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+}
+
 .fc-button:hover {
   background: var(--surface-3) !important;
   color: var(--text-primary) !important;
@@ -469,6 +479,12 @@ input:focus, textarea:focus, select:focus {
   background: var(--accent) !important;
   color: white !important;
   border-color: var(--accent) !important;
+}
+
+.fc .fc-toolbar-chunk {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
 }
 
 .fc-list-event {
@@ -535,6 +551,7 @@ input:focus, textarea:focus, select:focus {
     display: flex !important;
     flex-wrap: wrap !important;
     justify-content: center !important;
+    gap: 4px !important;
   }
 }
 
