@@ -66,7 +66,8 @@ interface BpStore {
     pulse: number,
     notes?: string,
     medicinesTaken?: string[],
-  ) => Promise<string | null>; // returns error message or null
+  ) => Promise<string | null>;
+  updateReading: (id: string, patch: Partial<Pick<BpReading, 'date' | 'time' | 'notes'>>) => void;
   deleteReading: (id: string) => void;
   clearAll: () => void;
 
@@ -179,6 +180,30 @@ export const useBpStore = create<BpStore>()(
           );
         }
       },
+
+      updateReading: (id, patch) => {
+        set((state) => {
+          const updatedReadings = state.readings.map((r) => {
+            if (r.id !== id) return r;
+            const newTime = patch.time ?? r.time;
+            const updated: BpReading = {
+              ...r,
+              ...patch,
+              timeOfDay: getTimeOfDay(newTime),
+            };
+            // Persist to RTDB
+            const userId = auth.currentUser?.uid;
+            if (userId) {
+              saveBpReading(userId, updated).catch((err) =>
+                console.error('[BpStore] updateReading RTDB error:', err),
+              );
+            }
+            return updated;
+          });
+          return { readings: updatedReadings };
+        });
+      },
+
 
       clearAll: () => {
         const userId = auth.currentUser?.uid;

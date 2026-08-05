@@ -11,6 +11,7 @@ import {
   Calendar, TrendingUp, Info, AlertTriangle,
   Pill, Target, Bell, Download, Printer,
   Flame, CheckCircle2, ToggleLeft, ToggleRight, X,
+  Pencil, Check,
 } from 'lucide-react';
 import {
   useBpStore, getBpCategory, BpReading, BpMedicine,
@@ -109,7 +110,7 @@ type TabId = 'overview' | 'analysis' | 'medicines' | 'settings';
 export default function BpTrackerComponent() {
   const {
     readings, medicines, goal, reminderSettings,
-    addReading, deleteReading, clearAll,
+    addReading, updateReading, deleteReading, clearAll,
     addMedicine, deleteMedicine, toggleMedicineActive,
     setGoal, setReminderSettings, getStreak,
   } = useBpStore();
@@ -125,6 +126,25 @@ export default function BpTrackerComponent() {
   const [selectedMeds, setSelectedMeds] = useState<string[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+
+  // Edit state
+  const [editingId, setEditingId]   = useState<string | null>(null);
+  const [editDate, setEditDate]     = useState('');
+  const [editTime, setEditTime]     = useState('');
+  const [editNotes, setEditNotes]   = useState('');
+
+  const openEdit = (r: { id: string; date: string; time: string; notes?: string }) => {
+    setEditingId(r.id);
+    setEditDate(r.date);
+    setEditTime(r.time);
+    setEditNotes(r.notes ?? '');
+  };
+
+  const saveEdit = () => {
+    if (!editingId) return;
+    updateReading(editingId, { date: editDate, time: editTime, notes: editNotes.trim() || undefined });
+    setEditingId(null);
+  };
 
   // Chart timeframe
   const [timeframe, setTimeframe] = useState<'7days' | '30days' | '1year'>('7days');
@@ -898,41 +918,109 @@ export default function BpTrackerComponent() {
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-[var(--border)] text-[var(--text-secondary)] text-[11px] font-semibold">
-                          <th className="py-2 px-3">Date & Time</th>
+                          <th className="py-2 px-3">Date &amp; Time</th>
                           <th className="py-2 px-3 text-center">Sys</th>
                           <th className="py-2 px-3 text-center">Dia</th>
                           <th className="py-2 px-3 text-center">Pulse</th>
                           <th className="py-2 px-3">Status</th>
                           <th className="py-2 px-3">Notes</th>
-                          <th className="py-2 px-3 text-right">Del</th>
+                          <th className="py-2 px-3 text-right">Actions</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[var(--border)]">
                         {readings.map((r) => (
-                          <tr key={r.id} className="hover:bg-[var(--surface-2)]/50 text-xs text-[var(--text-primary)]">
-                            <td className="py-2.5 px-3 whitespace-nowrap">
-                              <span className="font-medium">{format(parseISO(r.date), 'MMM d, yyyy')}</span>
-                              <span className="text-[var(--text-tertiary)] ml-1">({r.time})</span>
-                              <span className="ml-1 text-[var(--text-tertiary)]">·</span>
-                              <span className="ml-1 text-[var(--text-tertiary)] capitalize">{r.timeOfDay}</span>
-                            </td>
-                            <td className="py-2.5 px-3 text-center font-bold text-red-400">{r.systolic}</td>
-                            <td className="py-2.5 px-3 text-center font-bold text-blue-400">{r.diastolic}</td>
-                            <td className="py-2.5 px-3 text-center text-emerald-400">{r.pulse}</td>
-                            <td className="py-2.5 px-3">
-                              <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold"
-                                style={{ backgroundColor: `${r.categoryColor}15`, color: r.categoryColor }}>
-                                {r.categoryLabel}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3 text-[var(--text-tertiary)] max-w-[140px] truncate italic">{r.notes || '—'}</td>
-                            <td className="py-2.5 px-3 text-right">
-                              <button onClick={() => deleteReading(r.id)}
-                                className="p-1 text-[var(--text-tertiary)] hover:text-red-400 transition-colors">
-                                <Trash2 size={13} />
-                              </button>
-                            </td>
-                          </tr>
+                          <React.Fragment key={r.id}>
+                            <tr className="hover:bg-[var(--surface-2)]/50 text-xs text-[var(--text-primary)]">
+                              <td className="py-2.5 px-3 whitespace-nowrap">
+                                <span className="font-medium">{format(parseISO(r.date), 'MMM d, yyyy')}</span>
+                                <span className="text-[var(--text-tertiary)] ml-1">({r.time})</span>
+                                <span className="ml-1 text-[var(--text-tertiary)]">·</span>
+                                <span className="ml-1 text-[var(--text-tertiary)] capitalize">{r.timeOfDay}</span>
+                              </td>
+                              <td className="py-2.5 px-3 text-center font-bold text-red-400">{r.systolic}</td>
+                              <td className="py-2.5 px-3 text-center font-bold text-blue-400">{r.diastolic}</td>
+                              <td className="py-2.5 px-3 text-center text-emerald-400">{r.pulse}</td>
+                              <td className="py-2.5 px-3">
+                                <span className="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold"
+                                  style={{ backgroundColor: `${r.categoryColor}15`, color: r.categoryColor }}>
+                                  {r.categoryLabel}
+                                </span>
+                              </td>
+                              <td className="py-2.5 px-3 text-[var(--text-tertiary)] max-w-[140px] truncate italic">{r.notes || '—'}</td>
+                              <td className="py-2.5 px-3 text-right">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => editingId === r.id ? setEditingId(null) : openEdit(r)}
+                                    className={`p-1 rounded transition-colors ${
+                                      editingId === r.id ? 'text-[var(--accent)] bg-[var(--accent)]/15' : 'text-[var(--text-tertiary)] hover:text-[var(--accent)]'
+                                    }`}
+                                    title="Edit reading date/time"
+                                  >
+                                    <Pencil size={13} />
+                                  </button>
+                                  <button onClick={() => deleteReading(r.id)}
+                                    className="p-1 text-[var(--text-tertiary)] hover:text-red-400 transition-colors"
+                                    title="Delete reading"
+                                  >
+                                    <Trash2 size={13} />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                            
+                            {editingId === r.id && (
+                              <tr>
+                                <td colSpan={7} className="py-2 px-3 bg-[var(--surface-2)]/60">
+                                  <div className="flex flex-col sm:flex-row items-end gap-3 p-3 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-sm">
+                                    <div className="flex-1 grid grid-cols-1 sm:grid-cols-3 gap-2 w-full">
+                                      <div className="space-y-1">
+                                        <label className="text-[10px] text-[var(--text-tertiary)] uppercase font-semibold">Date</label>
+                                        <input
+                                          type="date"
+                                          value={editDate}
+                                          onChange={(e) => setEditDate(e.target.value)}
+                                          className="w-full px-2 py-1.5 text-xs bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--accent)]"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[10px] text-[var(--text-tertiary)] uppercase font-semibold">Time</label>
+                                        <input
+                                          type="time"
+                                          value={editTime}
+                                          onChange={(e) => setEditTime(e.target.value)}
+                                          className="w-full px-2 py-1.5 text-xs bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--accent)]"
+                                        />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <label className="text-[10px] text-[var(--text-tertiary)] uppercase font-semibold">Notes</label>
+                                        <input
+                                          type="text"
+                                          value={editNotes}
+                                          onChange={(e) => setEditNotes(e.target.value)}
+                                          placeholder="Notes..."
+                                          className="w-full px-2 py-1.5 text-xs bg-[var(--surface-2)] border border-[var(--border)] rounded-lg focus:outline-none focus:border-[var(--accent)]"
+                                        />
+                                      </div>
+                                    </div>
+                                    <div className="flex gap-2 shrink-0">
+                                      <button
+                                        onClick={() => setEditingId(null)}
+                                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--surface-3)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                                      >
+                                        Cancel
+                                      </button>
+                                      <button
+                                        onClick={saveEdit}
+                                        className="px-3 py-1.5 text-xs font-semibold rounded-lg bg-[var(--accent)] text-white hover:opacity-90 transition-opacity flex items-center gap-1"
+                                      >
+                                        <Check size={12} /> Save
+                                      </button>
+                                    </div>
+                                  </div>
+                                </td>
+                              </tr>
+                            )}
+                          </React.Fragment>
                         ))}
                       </tbody>
                     </table>
