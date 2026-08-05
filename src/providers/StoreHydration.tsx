@@ -8,9 +8,10 @@
 // is NEVER read during SSR (which causes hydration mismatches).
 // This component safely rehydrates them on the client side only.
 //
-// useBpSync() is also called here because this component is
-// rendered INSIDE <AuthProvider>, so useAuth() correctly sees
-// the real logged-in user (not the default context null value).
+// useBpSync() and useFirestoreSync() are BOTH called here
+// because this component renders INSIDE <AuthProvider>, so
+// useAuth() correctly sees the real logged-in user
+// (not the default context null value).
 // ============================================================
 
 import { useEffect } from 'react';
@@ -18,6 +19,7 @@ import { useReminderStore } from '@/stores/reminderStore';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { useBpStore } from '@/stores/bpStore';
 import { useBpSync } from '@/hooks/useBpSync';
+import { useFirestoreSync } from '@/hooks/useFirestoreSync';
 
 export function StoreHydration() {
   useEffect(() => {
@@ -28,9 +30,10 @@ export function StoreHydration() {
     useBpStore.persist.rehydrate();
   }, []);
 
-  // Subscribe to RTDB — must be here (inside AuthContext.Provider tree)
-  // so that useAuth() returns the real user, not the default null value.
-  useBpSync();
+  // Both sync hooks must live here (inside AuthContext.Provider tree)
+  // so that useAuth() returns the real signed-in user.
+  useBpSync();        // Syncs BP readings + medicines from RTDB
+  useFirestoreSync(); // Syncs reminders from RTDB
 
   // Renders nothing — purely a side-effect component.
   return null;

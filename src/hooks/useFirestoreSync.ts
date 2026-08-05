@@ -1,16 +1,16 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Firestore Sync Hook
-// Listens to Firestore real-time updates and keeps the
-// reminders Zustand store in sync when the user is logged in.
+// RemindMe AI — RTDB Sync Hook (Reminders)
+// Subscribes to reminders/{userId} in Realtime Database and
+// keeps the Zustand reminderStore in sync when signed in.
 //
-// NOTE: BP data is synced via useBpSync (RTDB) — not here.
+// BP data is synced separately via useBpSync (also RTDB).
 // ============================================================
 
 import { useEffect } from 'react';
 import { useAuth } from '@/providers/AuthProvider';
-import { firestoreService } from '@/services/firestoreService';
+import { subscribeToReminders } from '@/services/rtdbService';
 import { useReminderStore } from '@/stores/reminderStore';
 
 export function useFirestoreSync() {
@@ -20,14 +20,21 @@ export function useFirestoreSync() {
   useEffect(() => {
     if (!user) return;
 
-    // Subscribe to reminders real-time
-    const unsubReminders = firestoreService.subscribeToReminders(user.uid, (reminders) => {
-      if (reminders.length > 0) {
-        setRemindersFromCloud(reminders);
-      }
-    });
+    console.log('[useFirestoreSync] Subscribing to RTDB reminders for uid:', user.uid);
+
+    const unsubReminders = subscribeToReminders(
+      user.uid,
+      (reminders) => {
+        console.log('[useFirestoreSync] Received', reminders.length, 'reminders from RTDB');
+        if (reminders.length > 0) {
+          setRemindersFromCloud(reminders);
+        }
+      },
+      (err) => console.error('[useFirestoreSync] reminders error:', err),
+    );
 
     return () => {
+      console.log('[useFirestoreSync] Unsubscribing RTDB reminders');
       unsubReminders();
     };
   }, [user, setRemindersFromCloud]);

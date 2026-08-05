@@ -1,14 +1,21 @@
 // ============================================================
-// RemindMe AI — Firebase Realtime Database Service (BP Module)
+// RemindMe AI — Firebase Realtime Database Service
 // ============================================================
-// All BP data is stored under:
+// Data structure:
 //   bp/{userId}/readings/{readingId}
 //   bp/{userId}/medicines/{medicineId}
+//   reminders/{userId}/{reminderId}
 //
 // Required RTDB Security Rules:
 // {
 //   "rules": {
 //     "bp": {
+//       "$uid": {
+//         ".read":  "$uid === auth.uid",
+//         ".write": "$uid === auth.uid"
+//       }
+//     },
+//     "reminders": {
 //       "$uid": {
 //         ".read":  "$uid === auth.uid",
 //         ".write": "$uid === auth.uid"
@@ -28,163 +35,120 @@ import {
   DatabaseReference,
 } from 'firebase/database';
 import { BpReading, BpMedicine } from '@/stores/bpStore';
+import { Reminder } from '@/types';
 
 // ── Path helpers ──────────────────────────────────────────────
 
-const readingRef = (userId: string, readingId: string): DatabaseReference =>
-  ref(rtdb, `bp/${userId}/readings/${readingId}`);
+const readingRef  = (uid: string, id: string): DatabaseReference => ref(rtdb, `bp/${uid}/readings/${id}`);
+const readingsRef = (uid: string): DatabaseReference             => ref(rtdb, `bp/${uid}/readings`);
+const medicineRef  = (uid: string, id: string): DatabaseReference => ref(rtdb, `bp/${uid}/medicines/${id}`);
+const medicinesRef = (uid: string): DatabaseReference             => ref(rtdb, `bp/${uid}/medicines`);
+const reminderRef  = (uid: string, id: string): DatabaseReference => ref(rtdb, `reminders/${uid}/${id}`);
+const remindersRef = (uid: string): DatabaseReference             => ref(rtdb, `reminders/${uid}`);
 
-const readingsRef = (userId: string): DatabaseReference =>
-  ref(rtdb, `bp/${userId}/readings`);
+// ── Generic helpers ──────────────────────────────────────────
 
-const medicineRef = (userId: string, medicineId: string): DatabaseReference =>
-  ref(rtdb, `bp/${userId}/medicines/${medicineId}`);
+async function writeNode(dbRef: DatabaseReference, data: object): Promise<string | null> {
+  try {
+    await set(dbRef, data);
+    return null;
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[RTDB] write error:', msg, err);
+    return msg;
+  }
+}
 
-const medicinesRef = (userId: string): DatabaseReference =>
-  ref(rtdb, `bp/${userId}/medicines`);
+async function deleteNode(dbRef: DatabaseReference): Promise<void> {
+  try {
+    await remove(dbRef);
+  } catch (err) {
+    console.error('[RTDB] delete error:', err);
+  }
+}
 
 // ── BP Readings ───────────────────────────────────────────────
 
-/**
- * Save (or overwrite) a single BP reading to RTDB.
- * Returns an error string on failure, or null on success.
- */
-export async function saveBpReading(
-  userId: string,
-  reading: BpReading,
-): Promise<string | null> {
-  try {
-    await set(readingRef(userId, reading.id), reading);
-    console.log('[RTDB] saveBpReading OK:', reading.id);
-    return null;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[RTDB] saveBpReading error:', msg, err);
-    return msg;
-  }
+export async function saveBpReading(uid: string, reading: BpReading): Promise<string | null> {
+  console.log('[RTDB] saveBpReading →', `bp/${uid}/readings/${reading.id}`);
+  return writeNode(readingRef(uid, reading.id), reading);
 }
 
-/**
- * Delete a BP reading from RTDB.
- * Returns an error string on failure, or null on success.
- */
-export async function deleteBpReading(
-  userId: string,
-  readingId: string,
-): Promise<string | null> {
-  try {
-    await remove(readingRef(userId, readingId));
-    console.log('[RTDB] deleteBpReading OK:', readingId);
-    return null;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[RTDB] deleteBpReading error:', msg, err);
-    return msg;
-  }
+export async function deleteBpReading(uid: string, id: string): Promise<void> {
+  return deleteNode(readingRef(uid, id));
 }
 
-/**
- * Subscribe to all BP readings for a user (real-time listener).
- * Calls onData whenever the data changes.
- * Returns an unsubscribe function.
- */
 export function subscribeToBpReadings(
-  userId: string,
+  uid: string,
   onData: (readings: BpReading[]) => void,
   onError?: (err: Error) => void,
 ): () => void {
-  const dbRef = readingsRef(userId);
-
+  const dbRef = readingsRef(uid);
   const handler = onValue(
     dbRef,
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        onData([]);
-        return;
-      }
-      const raw = snapshot.val() as Record<string, BpReading>;
-      const readings: BpReading[] = Object.values(raw).sort((a, b) =>
-        b.date.localeCompare(a.date) || b.time.localeCompare(a.time),
-      );
-      onData(readings);
+    (snap) => {
+      if (!snap.exists()) { onData([]); return; }
+      const vals = Object.values(snap.val() as Record<string, BpReading>);
+      onData(vals.sort((a, b) => b.date.localeCompare(a.date) || b.time.localeCompare(a.time)));
     },
-    (err) => {
-      console.error('[RTDB] subscribeToBpReadings error:', err);
-      onError?.(err);
-    },
+    (err) => { console.error('[RTDB] subscribeToBpReadings error:', err); onError?.(err); },
   );
-
-  // Return unsubscribe function
   return () => off(dbRef, 'value', handler);
 }
 
 // ── BP Medicines ──────────────────────────────────────────────
 
-/**
- * Save (or overwrite) a single BP medicine to RTDB.
- * Returns an error string on failure, or null on success.
- */
-export async function saveBpMedicine(
-  userId: string,
-  medicine: BpMedicine,
-): Promise<string | null> {
-  try {
-    await set(medicineRef(userId, medicine.id), medicine);
-    console.log('[RTDB] saveBpMedicine OK:', medicine.id);
-    return null;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[RTDB] saveBpMedicine error:', msg, err);
-    return msg;
-  }
+export async function saveBpMedicine(uid: string, med: BpMedicine): Promise<string | null> {
+  console.log('[RTDB] saveBpMedicine →', `bp/${uid}/medicines/${med.id}`);
+  return writeNode(medicineRef(uid, med.id), med);
 }
 
-/**
- * Delete a BP medicine from RTDB.
- * Returns an error string on failure, or null on success.
- */
-export async function deleteBpMedicine(
-  userId: string,
-  medicineId: string,
-): Promise<string | null> {
-  try {
-    await remove(medicineRef(userId, medicineId));
-    console.log('[RTDB] deleteBpMedicine OK:', medicineId);
-    return null;
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : String(err);
-    console.error('[RTDB] deleteBpMedicine error:', msg, err);
-    return msg;
-  }
+export async function deleteBpMedicine(uid: string, id: string): Promise<void> {
+  return deleteNode(medicineRef(uid, id));
 }
 
-/**
- * Subscribe to all BP medicines for a user (real-time listener).
- * Returns an unsubscribe function.
- */
 export function subscribeToBpMedicines(
-  userId: string,
+  uid: string,
   onData: (medicines: BpMedicine[]) => void,
   onError?: (err: Error) => void,
 ): () => void {
-  const dbRef = medicinesRef(userId);
-
+  const dbRef = medicinesRef(uid);
   const handler = onValue(
     dbRef,
-    (snapshot) => {
-      if (!snapshot.exists()) {
-        onData([]);
-        return;
-      }
-      const raw = snapshot.val() as Record<string, BpMedicine>;
-      const medicines: BpMedicine[] = Object.values(raw);
-      onData(medicines);
+    (snap) => {
+      if (!snap.exists()) { onData([]); return; }
+      onData(Object.values(snap.val() as Record<string, BpMedicine>));
     },
-    (err) => {
-      console.error('[RTDB] subscribeToBpMedicines error:', err);
-      onError?.(err);
-    },
+    (err) => { console.error('[RTDB] subscribeToBpMedicines error:', err); onError?.(err); },
   );
+  return () => off(dbRef, 'value', handler);
+}
 
+// ── Reminders ─────────────────────────────────────────────────
+
+export async function saveReminder(uid: string, reminder: Reminder): Promise<string | null> {
+  console.log('[RTDB] saveReminder →', `reminders/${uid}/${reminder.id}`);
+  return writeNode(reminderRef(uid, reminder.id), { ...reminder, updatedAt: new Date().toISOString() });
+}
+
+export async function deleteReminder(uid: string, id: string): Promise<void> {
+  return deleteNode(reminderRef(uid, id));
+}
+
+export function subscribeToReminders(
+  uid: string,
+  onData: (reminders: Reminder[]) => void,
+  onError?: (err: Error) => void,
+): () => void {
+  const dbRef = remindersRef(uid);
+  const handler = onValue(
+    dbRef,
+    (snap) => {
+      if (!snap.exists()) { onData([]); return; }
+      const vals = Object.values(snap.val() as Record<string, Reminder>);
+      onData(vals);
+    },
+    (err) => { console.error('[RTDB] subscribeToReminders error:', err); onError?.(err); },
+  );
   return () => off(dbRef, 'value', handler);
 }

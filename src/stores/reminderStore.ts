@@ -16,7 +16,7 @@ import { generateId, isReminderOverdue, isDueToday, isReminderUpcoming } from '@
 import { STORAGE_KEYS } from '@/constants';
 import { format } from 'date-fns';
 import { auth } from '@/lib/firebase';
-import { firestoreService } from '@/services/firestoreService';
+import { saveReminder, deleteReminder } from '@/services/rtdbService';
 
 // ============================================================
 // Sample Data
@@ -203,7 +203,11 @@ export const useReminderStore = create<ReminderStore>()(
 
         const userId = auth.currentUser?.uid;
         if (userId) {
-          firestoreService.saveReminder(userId, newReminder);
+          saveReminder(userId, newReminder).catch((err) =>
+            console.error('[ReminderStore] addReminder RTDB error:', err),
+          );
+        } else {
+          console.warn('[ReminderStore] addReminder: no user logged in, saved locally only');
         }
 
         return newReminder;
@@ -217,7 +221,9 @@ export const useReminderStore = create<ReminderStore>()(
           const updatedReminder = updatedReminders.find((r) => r.id === id);
           const userId = auth.currentUser?.uid;
           if (userId && updatedReminder) {
-            firestoreService.saveReminder(userId, updatedReminder);
+            saveReminder(userId, updatedReminder).catch((err) =>
+              console.error('[ReminderStore] updateReminder RTDB error:', err),
+            );
           }
           return { reminders: updatedReminders };
         });
@@ -230,7 +236,9 @@ export const useReminderStore = create<ReminderStore>()(
 
         const userId = auth.currentUser?.uid;
         if (userId) {
-          firestoreService.deleteReminder(userId, id);
+          deleteReminder(userId, id).catch((err) =>
+            console.error('[ReminderStore] deleteReminder RTDB error:', err),
+          );
         }
       },
 
@@ -314,7 +322,9 @@ export const useReminderStore = create<ReminderStore>()(
         const userId = auth.currentUser?.uid;
         if (userId) {
           get().reminders.forEach((r) => {
-            firestoreService.deleteReminder(userId, r.id);
+            deleteReminder(userId, r.id).catch((err) =>
+              console.error('[ReminderStore] clearAll RTDB error:', err),
+            );
           });
         }
         set({ reminders: [] });
