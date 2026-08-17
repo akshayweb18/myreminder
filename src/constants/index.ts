@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — App Constants
+// RemindMe — App Constants
 // ============================================================
 
 import { Category, Priority, EarlyReminder, AccentColor } from '@/types';
@@ -167,7 +167,7 @@ export const STORAGE_KEYS = {
 // ============================================================
 
 export const APP_INFO = {
-  name: 'RemindMe AI',
+  name: 'RemindMe',
   tagline: 'Remember Everything. Forget Nothing.',
   version: '1.0.0',
   description: 'A world-class reminder application with premium UX.',

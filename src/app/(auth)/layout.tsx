@@ -11,7 +11,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         <div className="h-9 w-9 sm:h-10 sm:w-10 rounded-2xl bg-gradient-to-br from-[var(--accent)] to-purple-500 flex items-center justify-center text-white text-lg sm:text-xl shadow-lg">
           🔔
         </div>
-        <span className="text-lg sm:text-xl font-bold font-display text-[var(--text-primary)]">RemindMe AI</span>
+        <span className="text-lg sm:text-xl font-bold font-display text-[var(--text-primary)]">RemindMe</span>
       </Link>
 
       <div className="w-full max-w-md card p-5 sm:p-8 relative z-10 shadow-[var(--shadow-xl)]">

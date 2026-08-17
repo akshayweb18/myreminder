@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Firebase Realtime Database Service
+// RemindMe — Firebase Realtime Database Service
 // ============================================================
 // Data structure:
 //   bp/{userId}/readings/{readingId}

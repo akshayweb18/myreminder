@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — BP Realtime Database Sync Hook
+// RemindMe — BP Realtime Database Sync Hook
 // Subscribes to RTDB bp/{userId}/readings and
 // bp/{userId}/medicines and keeps Zustand bpStore in sync
 // whenever the signed-in user's data changes in the cloud.

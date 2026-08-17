@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Login Page (Firebase Email + Google Sign-In)
+// RemindMe — Login Page (Firebase Email + Google Sign-In)
 // ============================================================
 
 import Link from 'next/link';

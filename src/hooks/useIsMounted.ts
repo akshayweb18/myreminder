@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — useIsMounted Hook (SSR-safe, no lint warnings)
+// RemindMe — useIsMounted Hook (SSR-safe, no lint warnings)
 // ============================================================
 //
 // Uses useSyncExternalStore which is the React-recommended way

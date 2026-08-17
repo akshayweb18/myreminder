@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Firebase Firestore Sync Service
+// RemindMe — Firebase Firestore Sync Service
 // ============================================================
 
 import { db } from '@/lib/firebase';

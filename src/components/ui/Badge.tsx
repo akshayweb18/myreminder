@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Badge Component
+// RemindMe — Badge Component
 // ============================================================
 
 import { cva, type VariantProps } from 'class-variance-authority';

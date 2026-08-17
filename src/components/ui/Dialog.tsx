@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Dialog (Modal) Component
+// RemindMe — Dialog (Modal) Component
 // ============================================================
 
 import * as DialogPrimitive from '@radix-ui/react-dialog';

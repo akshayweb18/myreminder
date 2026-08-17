@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Settings Page
+// RemindMe — Settings Page
 // ============================================================
 
 import { useSettingsStore } from '@/stores/settingsStore';

@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Blood Pressure Tracker Wrapper
+// RemindMe — Blood Pressure Tracker Wrapper
 // ============================================================
 
 import React, { useState, useEffect } from 'react';
@@ -11,7 +11,9 @@ export default function BpTrackerPage() {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    setMounted(true);
+    setTimeout(() => {
+      setMounted(true);
+    }, 0);
   }, []);
 
   if (!mounted) {

@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Select Component
+// RemindMe — Select Component
 // ============================================================
 
 import * as SelectPrimitive from '@radix-ui/react-select';

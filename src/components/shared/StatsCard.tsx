@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — StatsCard Component
+// RemindMe — StatsCard Component
 // ============================================================
 
 import { motion } from 'framer-motion';

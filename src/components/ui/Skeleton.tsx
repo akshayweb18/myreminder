@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Skeleton Component
+// RemindMe — Skeleton Component
 // ============================================================
 
 import { cn } from '@/lib/utils';

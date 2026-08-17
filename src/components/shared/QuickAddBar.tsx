@@ -1,7 +1,7 @@
 ﻿'use client';
 
 // ============================================================
-// RemindMe AI — QuickAddBar Component
+// RemindMe — QuickAddBar Component
 // One-line input to instantly create a reminder
 // ============================================================
 

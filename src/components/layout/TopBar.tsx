@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Top Bar Component (PWA Mobile-First)
+// RemindMe — Top Bar Component (PWA Mobile-First)
 // Mobile: App logo + title left, bell + avatar right (minimal)
 // Desktop: Full layout with search, theme switcher, logout
 // ============================================================
@@ -46,7 +46,7 @@ export function TopBar({ className }: TopBarProps) {
   const mounted   = useIsMounted();
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const title        = PAGE_TITLES[pathname] ?? 'RemindMe AI';
+  const title        = PAGE_TITLES[pathname] ?? 'RemindMe';
   const overdueCount = mounted ? getOverdueReminders().length : 0;
   const isDetail     = DETAIL_PAGES.some((p) => pathname.startsWith(p));
 

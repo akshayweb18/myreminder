@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Firebase Storage Service (Attachments/Voice)
+// RemindMe — Firebase Storage Service (Attachments/Voice)
 // ============================================================
 
 import { storage } from '@/lib/firebase';

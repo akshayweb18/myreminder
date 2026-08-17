@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Firebase SDK Configuration & Services
+// RemindMe — Firebase SDK Configuration & Services
 // ============================================================
 
 import { initializeApp, getApps, getApp } from 'firebase/app';

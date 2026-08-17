@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Button Component
+// RemindMe — Button Component
 // ============================================================
 
 import { forwardRef } from 'react';

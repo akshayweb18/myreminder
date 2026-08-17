@@ -1,12 +1,12 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — All Reminders Page (With Search, Filter & Sort)
+// RemindMe — All Reminders Page (With Search, Filter & Sort)
 // ============================================================
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, ArrowUpDown, Plus, SlidersHorizontal, Check, Trash2 } from 'lucide-react';
+import { Search, Plus, SlidersHorizontal, Check, Trash2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useReminderStore } from '@/stores/reminderStore';
 import { ReminderCard } from '@/components/shared/ReminderCard';
@@ -14,13 +14,13 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { CATEGORIES, PRIORITIES } from '@/constants';
-import { Priority, SortOption, ReminderStatus } from '@/types';
+import { Priority, SortOption } from '@/types';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
 
 export default function RemindersPage() {
   const router = useRouter();
-  const { reminders, sort, setSort, filter, setFilter, clearFilter, clearAllReminders, trashReminder } = useReminderStore();
+  const { reminders, sort, setSort, clearAllReminders, trashReminder } = useReminderStore();
   const [showDeleteAllConfirm, setShowDeleteAllConfirm] = useState(false);
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);

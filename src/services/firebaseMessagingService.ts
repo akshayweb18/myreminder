@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Firebase Cloud Messaging & Notification Helpers
+// RemindMe — Firebase Cloud Messaging & Notification Helpers
 // ============================================================
 
 import { initMessaging } from '@/lib/firebase';

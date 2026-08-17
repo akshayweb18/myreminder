@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Notification Provider
+// RemindMe — Notification Provider
 // ============================================================
 
 import React, { createContext, useContext, useEffect, useRef } from 'react';
@@ -112,7 +112,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
                   { action: 'done', title: '✅ Done' },
                   { action: 'snooze', title: '⏰ Snooze 15m' },
                 ],
-              } as any);
+              } as NotificationOptions);
               if ('vibrate' in navigator) {
                 navigator.vibrate([200, 100, 200, 100, 200]);
               }
@@ -164,7 +164,7 @@ export function NotificationProvider({ children }: { children: React.ReactNode }
               icon: '/icons/icon-192.png',
               silent: false,
               vibrate: [200, 100, 200, 100, 200],
-            } as any);
+            } as NotificationOptions);
             if ('vibrate' in navigator) {
               navigator.vibrate([200, 100, 200, 100, 200]);
             }

@@ -1,5 +1,5 @@
 ﻿// ============================================================
-// RemindMe AI — Local Notification Service (No server needed)
+// RemindMe — Local Notification Service (No server needed)
 // Uses browser Notification API + setTimeout scheduling
 // ============================================================
 

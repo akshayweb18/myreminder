@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Firebase Auth Provider
+// RemindMe — Firebase Auth Provider
 // ============================================================
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     Confirm Log Out
                   </h3>
                   <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed max-w-xs">
-                    Are you sure you want to log out of RemindMe AI? You will need to log back in to sync your reminders.
+                    Are you sure you want to log out of RemindMe? You will need to log back in to sync your reminders.
                   </p>
                 </div>
                 

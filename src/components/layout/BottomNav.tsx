@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Bottom Navigation (Mobile PWA)
+// RemindMe — Bottom Navigation (Mobile PWA)
 // Native app-style: center FAB, pill active indicator,
 // spring animations, safe-area-inset-bottom support.
 // ============================================================
@@ -9,7 +9,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Bell, Calendar, Heart, Settings, Plus } from 'lucide-react';
+import { LayoutDashboard, Bell, Heart, Settings, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LEFT_ITEMS = [

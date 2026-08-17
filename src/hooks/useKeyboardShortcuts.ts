@@ -1,7 +1,7 @@
 ﻿'use client';
 
 // ============================================================
-// RemindMe AI — useKeyboardShortcuts Hook
+// RemindMe — useKeyboardShortcuts Hook
 // N = New Reminder | Ctrl+K = Command Palette
 // ============================================================
 

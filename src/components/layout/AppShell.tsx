@@ -1,7 +1,7 @@
 ﻿'use client';
 
 // ============================================================
-// RemindMe AI — App Shell Layout (PWA Mobile-First)
+// RemindMe — App Shell Layout (PWA Mobile-First)
 // ============================================================
 
 import { Sidebar } from './Sidebar';

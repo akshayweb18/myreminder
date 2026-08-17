@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — User Profile Page (Firebase Auth + Storage)
+// RemindMe — User Profile Page (Firebase Auth + Storage)
 // ============================================================
 
 import { Button } from '@/components/ui/Button';
@@ -10,7 +10,7 @@ import { User, Mail, Check, Camera, LogOut, Shield, Loader2 } from 'lucide-react
 import { useState, useRef, useEffect } from 'react';
 import { updateProfile } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { auth, storage } from '@/lib/firebase';
+import { storage } from '@/lib/firebase';
 import { firestoreService } from '@/services/firestoreService';
 import { useAuth } from '@/providers/AuthProvider';
 import Image from 'next/image';
@@ -29,9 +29,11 @@ export default function ProfilePage() {
   // Populate from Firebase user
   useEffect(() => {
     if (user) {
-      setDisplayName(user.displayName ?? '');
-      setEmail(user.email ?? '');
-      setPhotoURL(user.photoURL ?? '');
+      setTimeout(() => {
+        setDisplayName(user.displayName ?? '');
+        setEmail(user.email ?? '');
+        setPhotoURL(user.photoURL ?? '');
+      }, 0);
     }
   }, [user]);
 

@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Utility Functions
+// RemindMe — Utility Functions
 // ============================================================
 
 import { type ClassValue, clsx } from 'clsx';

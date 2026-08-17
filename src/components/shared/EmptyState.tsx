@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — EmptyState Component
+// RemindMe — EmptyState Component
 // ============================================================
 
 import { motion } from 'framer-motion';

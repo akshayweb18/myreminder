@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Service Worker
+// RemindMe — Service Worker
 // ============================================================
 
 const CACHE_NAME = 'remindme-ai-v1';
@@ -120,7 +120,7 @@ self.addEventListener('push', (event) => {
   if (!event.data) return;
   const data = event.data.json();
   event.waitUntil(
-    self.registration.showNotification(data.title ?? 'RemindMe AI', {
+    self.registration.showNotification(data.title ?? 'RemindMe', {
       body: data.body ?? '',
       icon: '/icons/icon-192.png',
       badge: '/icons/icon-96.png',

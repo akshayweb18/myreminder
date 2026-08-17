@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — FloatingButton (FAB)
+// RemindMe — FloatingButton (FAB)
 // ============================================================
 
 import { motion, AnimatePresence } from 'framer-motion';

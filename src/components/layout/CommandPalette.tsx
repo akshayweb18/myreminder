@@ -1,10 +1,10 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Command Palette (Ctrl+K)
+// RemindMe — Command Palette (Ctrl+K)
 // ============================================================
 
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Bell, Calendar, LayoutDashboard, Settings, History, Trash2, Plus, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -47,38 +47,40 @@ export function CommandPalette() {
 
   useEffect(() => {
     if (commandPaletteOpen) {
-      setTimeout(() => inputRef.current?.focus(), 50);
-      setSelected(0);
+      setTimeout(() => {
+        if (inputRef.current) inputRef.current.focus();
+        setSelected(0);
+      }, 50);
     } else {
-      setQuery('');
+      setTimeout(() => {
+        setQuery('');
+      }, 0);
     }
   }, [commandPaletteOpen]);
 
-  const filteredCommands = COMMANDS.filter((cmd) =>
-    cmd.label.toLowerCase().includes(query.toLowerCase()),
-  );
+  const allResults = useMemo(() => {
+    const filteredCommands = COMMANDS.filter((cmd) =>
+      cmd.label.toLowerCase().includes(query.toLowerCase()),
+    );
+    const filteredReminders = query
+      ? reminders
+          .filter((r) => r.title.toLowerCase().includes(query.toLowerCase()) && r.status !== 'trashed')
+          .slice(0, 4)
+      : [];
+    return [
+      ...filteredCommands,
+      ...filteredReminders.map((r) => ({
+        id: r.id,
+        label: r.title,
+        icon: Bell,
+        href: `/reminders/${r.id}`,
+        group: 'Reminders',
+        description: r.categoryId,
+      })),
+    ];
+  }, [query, reminders]);
 
-  const filteredReminders = query
-    ? reminders
-        .filter((r) => r.title.toLowerCase().includes(query.toLowerCase()) && r.status !== 'trashed')
-        .slice(0, 4)
-    : [];
 
-  const allResults = [
-    ...filteredCommands,
-    ...filteredReminders.map((r) => ({
-      id: r.id,
-      label: r.title,
-      icon: Bell,
-      href: `/reminders/${r.id}`,
-      group: 'Reminders',
-      description: r.categoryId,
-    })),
-  ];
-
-  useEffect(() => {
-    setSelected(0);
-  }, [query]);
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
@@ -136,14 +138,20 @@ export function CommandPalette() {
               <input
                 ref={inputRef}
                 value={query}
-                onChange={(e) => setQuery(e.target.value)}
+                onChange={(e) => {
+                  setQuery(e.target.value);
+                  setSelected(0);
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="Search reminders, actions..."
                 className="flex-1 bg-transparent text-[var(--text-primary)] placeholder:text-[var(--text-tertiary)] text-sm outline-none"
               />
               {query && (
                 <button
-                  onClick={() => setQuery('')}
+                  onClick={() => {
+                    setQuery('');
+                    setSelected(0);
+                  }}
                   className="text-[var(--text-tertiary)] hover:text-[var(--text-primary)]"
                 >
                   <X size={14} />
@@ -158,7 +166,7 @@ export function CommandPalette() {
             <div className="max-h-80 overflow-y-auto py-2">
               {allResults.length === 0 ? (
                 <div className="px-4 py-8 text-center text-sm text-[var(--text-tertiary)]">
-                  No results for "{query}"
+                  No results for &quot;{query}&quot;
                 </div>
               ) : (
                 groups.map((group) => {
@@ -168,7 +176,7 @@ export function CommandPalette() {
                       <div className="px-4 py-1.5 text-[10px] font-semibold text-[var(--text-tertiary)] uppercase tracking-wider">
                         {group}
                       </div>
-                      {groupItems.map((item, idx) => {
+                      {groupItems.map((item) => {
                         const globalIdx = allResults.indexOf(item);
                         const isSelected = globalIdx === selected;
                         const Icon = item.icon;

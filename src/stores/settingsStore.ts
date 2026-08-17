@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Settings Store
+// RemindMe — Settings Store
 // ============================================================
 
 import { create } from 'zustand';

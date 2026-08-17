@@ -1,10 +1,10 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Theme Provider
+// RemindMe — Theme Provider
 // ============================================================
 
-import { createContext, useContext, useEffect, useRef } from 'react';
+import { createContext, useContext, useEffect } from 'react';
 import { useSettingsStore } from '@/stores/settingsStore';
 import { ACCENT_COLORS } from '@/constants';
 import { ThemeMode, AccentColor } from '@/types';
@@ -32,9 +32,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { settings, setTheme: storeSetTheme, setAccentColor: storeSetAccentColor } = useSettingsStore();
   const mounted = useIsMounted();
 
-  // Ref to track resolved theme without triggering re-renders
-  const resolvedThemeRef = useRef<'light' | 'dark'>('dark');
-
   // Resolve and apply theme + accent color to DOM
   useEffect(() => {
     const root = document.documentElement;
@@ -45,8 +42,6 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     } else {
       resolved = settings.theme as 'light' | 'dark';
     }
-
-    resolvedThemeRef.current = resolved;
 
     root.classList.remove('light', 'dark');
     root.classList.add(resolved);
@@ -59,9 +54,14 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [settings.theme, settings.accentColor]);
 
-  const resolvedTheme = mounted
-    ? (resolvedThemeRef.current as 'light' | 'dark')
-    : 'dark';
+  let resolvedTheme: 'light' | 'dark' = 'dark';
+  if (mounted) {
+    if (settings.theme === 'system') {
+      resolvedTheme = (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+    } else {
+      resolvedTheme = settings.theme as 'light' | 'dark';
+    }
+  }
 
   const toggleTheme = () => {
     const next = resolvedTheme === 'dark' ? 'light' : 'dark';

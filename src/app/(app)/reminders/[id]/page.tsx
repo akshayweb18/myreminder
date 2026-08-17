@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Reminder Detail & Edit Page
+// RemindMe — Reminder Detail & Edit Page
 // ============================================================
 
 import { useParams, useRouter } from 'next/navigation';
@@ -9,8 +9,8 @@ import { useReminderStore } from '@/stores/reminderStore';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
-import { getCategoryById, getPriorityConfig } from '@/constants';
-import { ArrowLeft, Check, Trash2, Clock, Calendar, MapPin, Tag } from 'lucide-react';
+import { getCategoryById } from '@/constants';
+import { ArrowLeft, Check, Trash2, Clock, Calendar } from 'lucide-react';
 import { Priority } from '@/types';
 
 export default function ReminderDetailPage() {
@@ -24,7 +24,7 @@ export default function ReminderDetailPage() {
   const [description, setDescription] = useState(reminder?.description || '');
   const [date, setDate] = useState(reminder?.date || '');
   const [time, setTime] = useState(reminder?.time || '');
-  const [priority, setPriority] = useState<Priority>(reminder?.priority || 'medium');
+  const [priority] = useState<Priority>(reminder?.priority || 'medium');
 
   if (!reminder) {
     return (

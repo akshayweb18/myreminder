@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Switch Component
+// RemindMe — Switch Component
 // ============================================================
 
 import * as SwitchPrimitive from '@radix-ui/react-switch';

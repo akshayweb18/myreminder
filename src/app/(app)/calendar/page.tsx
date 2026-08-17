@@ -1,11 +1,10 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Full Calendar Page (FullCalendar integration)
+// RemindMe — Full Calendar Page (FullCalendar integration)
 // ============================================================
 
 import dynamic from 'next/dynamic';
-import { useState } from 'react';
 import { useReminderStore } from '@/stores/reminderStore';
 import { getCategoryById } from '@/constants';
 import { useRouter } from 'next/navigation';

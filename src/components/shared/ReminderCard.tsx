@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — ReminderCard Component
+// RemindMe — ReminderCard Component
 // ============================================================
 
 import { useState, useRef, useEffect } from 'react';
@@ -192,7 +192,14 @@ export function ReminderCard({
                             </button>
                           )}
                           <button
-                            onClick={() => { reminder.pinned ? unpinReminder(reminder.id) : pinReminder(reminder.id); setShowActions(false); }}
+                            onClick={() => {
+                              if (reminder.pinned) {
+                                unpinReminder(reminder.id);
+                              } else {
+                                pinReminder(reminder.id);
+                              }
+                              setShowActions(false);
+                            }}
                             className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
                           >
                             {reminder.pinned ? <PinOff size={14} /> : <Pin size={14} />}

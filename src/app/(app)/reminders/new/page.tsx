@@ -1,18 +1,18 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Create Reminder Page (Rich Fields & Natural Language)
+// RemindMe — Create Reminder Page (Rich Fields & Natural Language)
 // ============================================================
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
-  Bell, Calendar, Clock, MapPin, Tag, Repeat, Sparkles,
-  ArrowLeft, Check, Plus, Trash2, ShieldAlert, FileText, CheckSquare,
+  Calendar, Clock, MapPin, Sparkles,
+  ArrowLeft, Check, Trash2, CheckSquare,
 } from 'lucide-react';
 import { useReminderStore } from '@/stores/reminderStore';
-import { CATEGORIES, PRIORITIES, REPEAT_OPTIONS, EARLY_REMINDER_OPTIONS, COMMON_EMOJIS, REMINDER_EXAMPLES } from '@/constants';
+import { CATEGORIES, PRIORITIES, REPEAT_OPTIONS, COMMON_EMOJIS, REMINDER_EXAMPLES } from '@/constants';
 import { Priority, RepeatType, ChecklistItem, Tag as TagType } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Input, Textarea } from '@/components/ui/Input';
@@ -36,7 +36,7 @@ export default function NewReminderPage() {
   const [repeatType, setRepeatType] = useState<RepeatType>('once');
   const [emoji, setEmoji] = useState('🔔');
   const [location, setLocation] = useState('');
-  const [notes, setNotes] = useState('');
+  const notes = '';
   
   // Checklist
   const [checklist, setChecklist] = useState<ChecklistItem[]>([]);
@@ -47,7 +47,7 @@ export default function NewReminderPage() {
   const [newTagText, setNewTagText] = useState('');
 
   // Early notification
-  const [earlyReminderValue, setEarlyReminderValue] = useState<number | null>(10);
+  const [earlyReminderValue] = useState<number | null>(10);
 
   // Handle Natural Language Parse Mock
   const handleNaturalLanguageParse = () => {
@@ -107,6 +107,7 @@ export default function NewReminderPage() {
   };
 
   // Add Tag
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const addTag = () => {
     if (!newTagText.trim()) return;
     setTags([

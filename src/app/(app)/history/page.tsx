@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — History Page (Completed, Missed & Archived)
+// RemindMe — History Page (Completed, Missed & Archived)
 // ============================================================
 
 import { useState } from 'react';

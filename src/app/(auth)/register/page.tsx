@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Register Page (Firebase createUser + Firestore)
+// RemindMe — Register Page (Firebase createUser + Firestore)
 // ============================================================
 
 import Link from 'next/link';
@@ -89,7 +89,7 @@ export default function RegisterPage() {
     <div className="space-y-6">
       <div className="text-center space-y-1">
         <h2 className="text-xl font-bold font-display text-[var(--text-primary)]">Create an account</h2>
-        <p className="text-xs text-[var(--text-tertiary)] font-sans">Start organizing your life with RemindMe AI</p>
+        <p className="text-xs text-[var(--text-tertiary)] font-sans">Start organizing your life with RemindMe</p>
       </div>
 
       {/* Google Sign-Up */}

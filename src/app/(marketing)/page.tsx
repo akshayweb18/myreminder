@@ -1,12 +1,12 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Landing Page (Apple/Linear Style)
+// RemindMe — Landing Page (Apple/Linear Style)
 // ============================================================
 
 import { motion } from 'framer-motion';
 import Link from 'next/link';
-import { ArrowRight, Bell, Sparkles, Shield, Smartphone, Zap, CheckCircle2, Download } from 'lucide-react';
+import { ArrowRight, Sparkles, Shield, Smartphone, Zap, Download } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 
 export default function LandingPage() {
@@ -42,7 +42,7 @@ export default function LandingPage() {
             transition={{ delay: 0.2 }}
             className="text-base sm:text-lg text-[var(--text-secondary)] max-w-2xl mx-auto"
           >
-            The world's most elegant reminder application. Designed with Apple-level precision, offline support, smart AI natural input, and instant PWA installation.
+            The world&apos;s most elegant reminder application. Designed with Apple-level precision, offline support, smart AI natural input, and instant PWA installation.
           </motion.p>
 
           <motion.div
@@ -82,7 +82,7 @@ export default function LandingPage() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="p-4 rounded-xl bg-[var(--surface-2)] space-y-2">
                   <p className="text-xs font-bold text-[var(--accent)]">⚡ Smart Natural Input</p>
-                  <p className="text-xs text-[var(--text-secondary)]">"Pay credit card bill every 20th"</p>
+                  <p className="text-xs text-[var(--text-secondary)]">&quot;Pay credit card bill every 20th&quot;</p>
                 </div>
                 <div className="p-4 rounded-xl bg-[var(--surface-2)] space-y-2">
                   <p className="text-xs font-bold text-emerald-400">📱 Native Mobile Experience</p>

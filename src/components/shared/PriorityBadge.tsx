@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — PriorityBadge Component
+// RemindMe — PriorityBadge Component
 // ============================================================
 
 import { Priority } from '@/types';

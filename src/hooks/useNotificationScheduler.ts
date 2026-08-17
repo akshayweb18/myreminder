@@ -1,7 +1,7 @@
 ﻿'use client';
 
 // ============================================================
-// RemindMe AI — useNotificationScheduler Hook
+// RemindMe — useNotificationScheduler Hook
 // Schedules browser notifications for all pending reminders
 // ============================================================
 

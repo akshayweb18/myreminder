@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Input & Textarea Components
+// RemindMe — Input & Textarea Components
 // ============================================================
 
 import { forwardRef } from 'react';

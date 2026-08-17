@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Forgot Password Page (Firebase sendPasswordResetEmail)
+// RemindMe — Forgot Password Page (Firebase sendPasswordResetEmail)
 // ============================================================
 
 import Link from 'next/link';

@@ -1,11 +1,10 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Trash Page (Restore or Permanent Delete)
+// RemindMe — Trash Page (Restore or Permanent Delete)
 // ============================================================
 
 import { useReminderStore } from '@/stores/reminderStore';
-import { ReminderCard } from '@/components/shared/ReminderCard';
 import { EmptyState } from '@/components/shared/EmptyState';
 import { Button } from '@/components/ui/Button';
 import { Trash2, RotateCcw } from 'lucide-react';

@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Reminder Store (Zustand + localStorage)
+// RemindMe — Reminder Store (Zustand + localStorage)
 // ============================================================
 
 import { create } from 'zustand';
@@ -26,6 +26,7 @@ const today = format(new Date(), 'yyyy-MM-dd');
 const tomorrow = format(new Date(Date.now() + 86400000), 'yyyy-MM-dd');
 const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd');
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const SAMPLE_REMINDERS: Reminder[] = [
   {
     id: 'sample-1',

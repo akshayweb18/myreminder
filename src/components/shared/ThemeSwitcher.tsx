@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — ThemeSwitcher Component
+// RemindMe — ThemeSwitcher Component
 // ============================================================
 
 import { motion } from 'framer-motion';

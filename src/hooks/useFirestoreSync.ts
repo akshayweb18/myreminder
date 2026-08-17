@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — RTDB Sync Hook (Reminders)
+// RemindMe — RTDB Sync Hook (Reminders)
 // Subscribes to reminders/{userId} in Realtime Database and
 // keeps the Zustand reminderStore in sync when signed in.
 //

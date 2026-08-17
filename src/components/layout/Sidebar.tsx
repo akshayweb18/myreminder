@@ -1,7 +1,7 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Sidebar Component
+// RemindMe — Sidebar Component
 // ============================================================
 
 import { motion, AnimatePresence } from 'framer-motion';
@@ -93,9 +93,6 @@ export function Sidebar({ className }: SidebarProps) {
               <div>
                 <p className="text-sm font-bold text-[var(--text-primary)] font-display leading-none">
                   RemindMe
-                </p>
-                <p className="text-[10px] text-[var(--text-tertiary)] leading-none mt-0.5">
-                  AI
                 </p>
               </div>
             </motion.div>

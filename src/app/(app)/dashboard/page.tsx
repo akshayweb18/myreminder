@@ -1,12 +1,12 @@
 'use client';
 
 // ============================================================
-// RemindMe AI — Dashboard Page
+// RemindMe — Dashboard Page
 // ============================================================
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin } from 'lucide-react';
 import { useReminderStore } from '@/stores/reminderStore';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { ReminderCard } from '@/components/shared/ReminderCard';
@@ -75,7 +75,7 @@ export default function DashboardPage() {
     getPinnedReminders,
   } = useReminderStore();
 
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => { setTimeout(() => setMounted(true), 0); }, []);
 
   const todayReminders = getTodayReminders();
   const upcomingReminders = getUpcomingReminders();
@@ -380,7 +380,7 @@ export default function DashboardPage() {
               { label: 'Calendar', icon: '📅', href: '/calendar', color: '#3b82f6' },
               { label: 'History', icon: '📋', href: '/history', color: '#8b5cf6' },
               { label: 'Settings', icon: '⚙️', href: '/settings', color: '#64748b' },
-            ].map(({ label, icon, href, color }) => (
+            ].map(({ label, icon, href }) => (
               <button
                 key={href}
                 onClick={() => router.push(href)}

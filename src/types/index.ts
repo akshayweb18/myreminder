@@ -1,5 +1,5 @@
 // ============================================================
-// RemindMe AI — Core Type Definitions
+// RemindMe — Core Type Definitions
 // ============================================================
 
 export type Priority = 'low' | 'medium' | 'high' | 'urgent';
