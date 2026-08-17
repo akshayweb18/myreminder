@@ -23,6 +23,7 @@ import {
   ReferenceLine, BarChart, Bar,
 } from 'recharts';
 import { format, parseISO, subDays } from 'date-fns';
+import { BpAiInsights } from '@/components/bp-tracker/BpAiInsights';
 
 // ============================================================
 // Helpers
@@ -1288,6 +1289,9 @@ export default function BpTrackerComponent() {
           </div>
         )}
       </div>
+
+      {/* AI Health Insights */}
+      <BpAiInsights />
     </>
   );
 }

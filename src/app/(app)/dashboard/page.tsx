@@ -4,9 +4,9 @@
 // RemindMe — Dashboard Page
 // ============================================================
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin, Sparkles, RefreshCw } from 'lucide-react';
 import { useReminderStore } from '@/stores/reminderStore';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { ReminderCard } from '@/components/shared/ReminderCard';
@@ -87,8 +87,48 @@ export default function DashboardPage() {
   const completionRate = getCompletionRate(reminders);
 
   const greeting = getGreeting();
-  // Defer time/date formatting to client to avoid locale-based hydration mismatch
   const timeStr = mounted ? format(new Date(), 'EEEE, MMMM d') : '';
+
+  // AI Daily Briefing state
+  const [briefing, setBriefing] = useState('');
+  const [briefingMood, setBriefingMood] = useState<'light' | 'moderate' | 'busy' | ''>('');
+  const [briefingLoading, setBriefingLoading] = useState(false);
+  const [briefingFetched, setBriefingFetched] = useState(false);
+
+  const fetchBriefing = useCallback(async () => {
+    if (briefingLoading || !mounted) return;
+    setBriefingLoading(true);
+    try {
+      const todayList = getTodayReminders().map((r) => ({
+        title: r.title,
+        time: r.time,
+        priority: r.priority,
+        categoryId: r.categoryId,
+        status: r.status,
+      }));
+      const res = await fetch('/api/ai/briefing', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reminders: todayList }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setBriefing(data.briefing || '');
+      setBriefingMood(data.mood || 'light');
+      setBriefingFetched(true);
+    } catch {
+      setBriefing('');
+    } finally {
+      setBriefingLoading(false);
+    }
+  }, [mounted, briefingLoading, getTodayReminders]);
+
+  useEffect(() => {
+    if (mounted && !briefingFetched) {
+      setTimeout(() => fetchBriefing(), 0);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mounted]);
 
   return (
     <div className="space-y-6">
@@ -142,6 +182,54 @@ export default function DashboardPage() {
           ))}
         </div>
       </motion.div>
+
+      {/* AI Daily Briefing Card */}
+      {mounted && (
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="relative overflow-hidden rounded-2xl border border-[var(--accent)]/20 p-4"
+          style={{ background: 'linear-gradient(135deg, var(--accent)/6%, rgba(139,92,246,0.04) 100%)' }}
+        >
+          <div className="flex items-start justify-between gap-3">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-xl flex items-center justify-center" style={{ background: 'var(--accent)' }}>
+                <Sparkles size={14} className="text-white" />
+              </div>
+              <span className="text-sm font-semibold text-[var(--text-primary)]">AI Daily Briefing</span>
+              {briefingMood && (
+                <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
+                  briefingMood === 'busy' ? 'bg-red-500/15 text-red-400' :
+                  briefingMood === 'moderate' ? 'bg-amber-500/15 text-amber-400' :
+                  'bg-emerald-500/15 text-emerald-400'
+                }`}>
+                  {briefingMood === 'busy' ? '🔥 Busy day' : briefingMood === 'moderate' ? '⚡ Moderate' : '✨ Light day'}
+                </span>
+              )}
+            </div>
+            <button
+              onClick={fetchBriefing}
+              disabled={briefingLoading}
+              className="text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors p-1 rounded-lg hover:bg-[var(--accent)]/10"
+              title="Refresh briefing"
+            >
+              <RefreshCw size={14} className={briefingLoading ? 'animate-spin' : ''} />
+            </button>
+          </div>
+
+          {briefingLoading && !briefing ? (
+            <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
+              <div className="w-4 h-4 rounded-full border-2 border-[var(--accent)]/40 border-t-[var(--accent)] animate-spin" />
+              AI is analyzing your day...
+            </div>
+          ) : briefing ? (
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{briefing}</p>
+          ) : (
+            <p className="text-xs text-[var(--text-tertiary)] italic">Click refresh to get your AI daily briefing.</p>
+          )}
+        </motion.div>
+      )}
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
