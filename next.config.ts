@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "lh3.googleusercontent.com",
+      },
+    ],
+  },
   // Transpile @fullcalendar/* so Turbopack/Webpack can process their ESM output.
   // Both bundlers will resolve packages via the `exports` map in each package.json
   // (e.g. `"."` → `"./index.js"` for ESM), so no manual alias wiring is needed.
