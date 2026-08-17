@@ -98,6 +98,7 @@ export interface Reminder {
   deletedAt?: string;
   nextOccurrence?: string; // for recurring reminders
   snoozedUntil?: string;
+  pinned?: boolean;
 }
 
 export interface ReminderFormValues {

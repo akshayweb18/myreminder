@@ -9,12 +9,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2, Clock, MoreHorizontal, Trash2,
   Archive, RotateCcw, MapPin, Repeat, Edit2,
+  Pin, PinOff, Copy, AlarmClock,
 } from 'lucide-react';
 import { Reminder } from '@/types';
 import { cn, formatReminderDate, isReminderOverdue } from '@/lib/utils';
-import { getCategoryById, getPriorityConfig } from '@/constants';
+import { getCategoryById, getPriorityConfig, SNOOZE_OPTIONS } from '@/constants';
 import { useReminderStore } from '@/stores/reminderStore';
 import { PriorityBadge } from './PriorityBadge';
+import { addMinutes, format } from 'date-fns';
 
 interface ReminderCardProps {
   reminder: Reminder;
@@ -36,22 +38,24 @@ export function ReminderCard({
   onSelectToggle,
 }: ReminderCardProps) {
   const [showActions, setShowActions] = useState(false);
-  const { completeReminder, trashReminder, archiveReminder, restoreReminder } = useReminderStore();
+  const [showSnooze, setShowSnooze] = useState(false);
+  const { completeReminder, trashReminder, archiveReminder, restoreReminder, pinReminder, unpinReminder, duplicateReminder, snoozeReminder } = useReminderStore();
 
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!showActions) return;
+    if (!showActions && !showSnooze) return;
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setShowActions(false);
+        setShowSnooze(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [showActions]);
+  }, [showActions, showSnooze]);
 
   const category = getCategoryById(reminder.categoryId);
   const priorityConfig = getPriorityConfig(reminder.priority);
@@ -72,6 +76,13 @@ export function ReminderCard({
         )
       : null;
 
+  const handleSnooze = (minutes: number) => {
+    const until = format(addMinutes(new Date(), minutes), "yyyy-MM-dd'T'HH:mm");
+    snoozeReminder(reminder.id, until);
+    setShowSnooze(false);
+    setShowActions(false);
+  };
+
   return (
     <motion.div
       layout
@@ -83,7 +94,7 @@ export function ReminderCard({
       onClick={isSelectionMode ? onSelectToggle : undefined}
       className={cn(
         'relative group',
-        showActions ? 'z-30' : 'z-10',
+        showActions || showSnooze ? 'z-30' : 'z-10',
         'bg-[var(--surface-1)] border border-[var(--border)]',
         'rounded-2xl',
         'shadow-[var(--shadow-md)] hover:shadow-[var(--shadow-lg)]',
@@ -99,6 +110,13 @@ export function ReminderCard({
         className="absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl"
         style={{ background: statusColor }}
       />
+
+      {/* Pinned indicator */}
+      {reminder.pinned && (
+        <div className="absolute top-2 right-2 z-10">
+          <Pin size={11} className="text-[var(--accent)]" />
+        </div>
+      )}
 
       <div className="p-4 pl-5">
         <div className="flex items-start gap-3">
@@ -136,7 +154,7 @@ export function ReminderCard({
               <div ref={menuRef} className="relative shrink-0" onClick={(e) => e.stopPropagation()}>
                 {!isSelectionMode && (
                   <button
-                    onClick={() => setShowActions(!showActions)}
+                    onClick={() => { setShowActions(!showActions); setShowSnooze(false); }}
                     className="p-1 rounded-lg text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] hover:text-[var(--text-primary)] transition-all sm:opacity-0 sm:group-hover:opacity-100"
                   >
                     <MoreHorizontal size={16} />
@@ -144,54 +162,102 @@ export function ReminderCard({
                 )}
 
                 <AnimatePresence>
-                  {showActions && (
-                    <>
-                      <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: -5 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: -5 }}
-                        className="absolute right-0 top-8 z-50 w-44 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-xl)]"
-                      >
+                  {showActions && !showSnooze && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: -5 }}
+                      className="absolute right-0 top-8 z-50 w-48 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-xl)] overflow-hidden"
+                    >
                       {reminder.status === 'pending' && (
                         <>
                           <button
                             onClick={() => { completeReminder(reminder.id); setShowActions(false); }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-emerald-400 hover:bg-emerald-500/10 transition-colors"
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-emerald-400 hover:bg-emerald-500/10 transition-colors"
                           >
                             <CheckCircle2 size={14} /> Mark Done
+                          </button>
+                          <button
+                            onClick={() => setShowSnooze(true)}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-amber-400 hover:bg-amber-500/10 transition-colors"
+                          >
+                            <AlarmClock size={14} /> Snooze
                           </button>
                           {onEdit && (
                             <button
                               onClick={() => { onEdit(reminder); setShowActions(false); }}
-                              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                              className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
                             >
                               <Edit2 size={14} /> Edit
                             </button>
                           )}
                           <button
+                            onClick={() => { reminder.pinned ? unpinReminder(reminder.id) : pinReminder(reminder.id); setShowActions(false); }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                          >
+                            {reminder.pinned ? <PinOff size={14} /> : <Pin size={14} />}
+                            {reminder.pinned ? 'Unpin' : 'Pin'}
+                          </button>
+                          <button
+                            onClick={() => { duplicateReminder(reminder.id); setShowActions(false); }}
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                          >
+                            <Copy size={14} /> Duplicate
+                          </button>
+                          <button
                             onClick={() => { archiveReminder(reminder.id); setShowActions(false); }}
-                            className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                            className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
                           >
                             <Archive size={14} /> Archive
                           </button>
                         </>
                       )}
-                      {(reminder.status === 'completed' || reminder.status === 'archived') && (
+                      {(reminder.status === 'completed' || reminder.status === 'archived' || reminder.status === 'missed') && (
                         <button
                           onClick={() => { restoreReminder(reminder.id); setShowActions(false); }}
-                          className="flex items-center gap-2 w-full px-3 py-2 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                          className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
                         >
                           <RotateCcw size={14} /> Restore
                         </button>
                       )}
                       <button
                         onClick={() => { trashReminder(reminder.id); setShowActions(false); }}
-                        className="flex items-center gap-2 w-full px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+                        className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
                       >
                         <Trash2 size={14} /> Delete
                       </button>
-                      </motion.div>
-                    </>
+                    </motion.div>
+                  )}
+
+                  {/* Snooze sub-menu */}
+                  {showSnooze && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: -5 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: -5 }}
+                      className="absolute right-0 top-8 z-50 w-44 bg-[var(--surface-1)] border border-[var(--border)] rounded-xl shadow-[var(--shadow-xl)] overflow-hidden"
+                    >
+                      <div className="px-3 py-2 border-b border-[var(--border)]">
+                        <p className="text-xs font-semibold text-amber-400 flex items-center gap-1.5">
+                          <AlarmClock size={12} /> Snooze for...
+                        </p>
+                      </div>
+                      {SNOOZE_OPTIONS.map((opt) => (
+                        <button
+                          key={opt.label}
+                          onClick={() => handleSnooze(opt.value)}
+                          className="flex items-center gap-2 w-full px-3 py-2.5 text-sm text-[var(--text-secondary)] hover:bg-[var(--bg-hover)] transition-colors"
+                        >
+                          {opt.label}
+                        </button>
+                      ))}
+                      <button
+                        onClick={() => setShowSnooze(false)}
+                        className="flex items-center gap-2 w-full px-3 py-2 text-xs text-[var(--text-tertiary)] hover:bg-[var(--bg-hover)] border-t border-[var(--border)] transition-colors"
+                      >
+                        ← Back
+                      </button>
+                    </motion.div>
                   )}
                 </AnimatePresence>
               </div>

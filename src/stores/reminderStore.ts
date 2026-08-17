@@ -158,6 +158,10 @@ interface ReminderStore {
   trashReminder: (id: string) => void;
   archiveReminder: (id: string) => void;
   permanentlyDelete: (id: string) => void;
+  pinReminder: (id: string) => void;
+  unpinReminder: (id: string) => void;
+  duplicateReminder: (id: string) => Reminder;
+  importReminders: (data: { reminders: Reminder[] }) => void;
 
   // Filters & Search
   setFilter: (filter: Partial<FilterState>) => void;
@@ -173,6 +177,7 @@ interface ReminderStore {
   getMissedReminders: () => Reminder[];
   getTrashedReminders: () => Reminder[];
   getArchivedReminders: () => Reminder[];
+  getPinnedReminders: () => Reminder[];
   getReminderById: (id: string) => Reminder | undefined;
   clearAllReminders: () => void;
   setRemindersFromCloud: (reminders: Reminder[]) => void;
@@ -278,6 +283,50 @@ export const useReminderStore = create<ReminderStore>()(
         get().deleteReminder(id);
       },
 
+      pinReminder: (id) => {
+        get().updateReminder(id, { pinned: true });
+      },
+
+      unpinReminder: (id) => {
+        get().updateReminder(id, { pinned: false });
+      },
+
+      duplicateReminder: (id) => {
+        const original = get().getReminderById(id);
+        if (!original) throw new Error('Reminder not found');
+        const duplicate: Reminder = {
+          ...original,
+          id: generateId(),
+          title: `${original.title} (Copy)`,
+          status: 'pending',
+          pinned: false,
+          completedAt: undefined,
+          deletedAt: undefined,
+          snoozedUntil: undefined,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        set((state) => ({ reminders: [duplicate, ...state.reminders] }));
+        const userId = auth.currentUser?.uid;
+        if (userId) {
+          saveReminder(userId, duplicate).catch((err) =>
+            console.error('[ReminderStore] duplicateReminder RTDB error:', err),
+          );
+        }
+        return duplicate;
+      },
+
+      importReminders: (data) => {
+        if (!data?.reminders?.length) return;
+        set((state) => {
+          const localMap = new Map(state.reminders.map((r) => [r.id, r]));
+          data.reminders.forEach((r) => {
+            if (!localMap.has(r.id)) localMap.set(r.id, r);
+          });
+          return { reminders: Array.from(localMap.values()) };
+        });
+      },
+
       setFilter: (filter) => {
         set((state) => ({ filter: { ...state.filter, ...filter } }));
       },
@@ -314,6 +363,9 @@ export const useReminderStore = create<ReminderStore>()(
 
       getArchivedReminders: () =>
         get().reminders.filter((r) => r.status === 'archived'),
+
+      getPinnedReminders: () =>
+        get().reminders.filter((r) => r.pinned && r.status !== 'trashed'),
 
       getReminderById: (id) =>
         get().reminders.find((r) => r.id === id),

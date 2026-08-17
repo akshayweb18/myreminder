@@ -6,7 +6,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus } from 'lucide-react';
+import { Bell, CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin } from 'lucide-react';
 import { useReminderStore } from '@/stores/reminderStore';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { ReminderCard } from '@/components/shared/ReminderCard';
@@ -72,6 +72,7 @@ export default function DashboardPage() {
     getOverdueReminders,
     getCompletedReminders,
     getMissedReminders,
+    getPinnedReminders,
   } = useReminderStore();
 
   useEffect(() => { setMounted(true); }, []);
@@ -81,6 +82,7 @@ export default function DashboardPage() {
   const overdueReminders = getOverdueReminders();
   const completedReminders = getCompletedReminders();
   const missedReminders = getMissedReminders();
+  const pinnedReminders = getPinnedReminders();
   const weeklyData = useWeeklyData(reminders);
   const completionRate = getCompletionRate(reminders);
 
@@ -185,6 +187,22 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left — Reminders */}
         <div className="lg:col-span-2 space-y-6">
+          {/* Pinned Reminders */}
+          {pinnedReminders.length > 0 && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <h3 className="text-base font-bold text-[var(--accent)] font-display flex items-center gap-2">
+                  <Pin size={16} /> Pinned
+                </h3>
+              </div>
+              <div className="space-y-3">
+                {pinnedReminders.map((r) => (
+                  <ReminderCard key={r.id} reminder={r} onEdit={() => router.push(`/reminders/${r.id}`)} />
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Overdue */}
           {overdueReminders.length > 0 && (
             <section>
