@@ -25,25 +25,24 @@ interface Message {
 
 const QUICK_QUESTIONS = [
   'Mera BP iss hafte kaisa tha?',
-  'Is my blood pressure normal?',
-  'Morning vs evening BP difference?',
-  '130/85 BP ka matlab kya hai?',
-  'What foods should I avoid?',
+  'Write a short daily motivation quote',
+  'Suggest a healthy dinner recipe',
   'How to reduce BP naturally?',
+  'Write an email draft to my boss',
+  'Explain quantum computing simply',
 ];
 
 const WELCOME_MESSAGE: Message = {
   id: 'welcome',
   role: 'assistant',
-  content: `Namaste! 👋 Main aapka AI Health Assistant hoon, powered by NVIDIA NIM.
+  content: `Namaste! 👋 Main aapka personal AI Assistant hoon, powered by NVIDIA NIM.
 
-Mujhe aapka BP data access hai — main aapke actual readings ke basis par personalized jawab de sakta hoon!
+Aap mujhse kuch bhi puch sakte hain — general knowledge, writing, motivation, coding, ya fir aapke reminders aur blood pressure data ke baare mein!
 
-Aap mujhse puch sakte hain:
-• **BP trends** aur patterns ke baare mein
-• **Medicine** ke side effects aur interactions
-• **Lifestyle tips** BP ko control karne ke liye
-• **Readings** ka matlab samajhne ke liye
+Aap mujhse ye sab puch sakte hain:
+• **General Questions:** "Tell me a joke", "Write an email draft", "Explain a concept"
+• **Health & BP Trends:** "Mera BP trend kaisa hai?", "Suggest lifestyle tips"
+• **Productivity:** "Help me structure my day"
 
 Hindi, Hinglish, ya English — jaise chahein baat karein! 😊`,
   timestamp: new Date(),
@@ -157,7 +156,7 @@ export default function AiChatPage() {
             <div className="h-8 w-8 rounded-xl bg-gradient-to-br from-violet-600 to-indigo-600 flex items-center justify-center">
               <Bot size={16} className="text-white" />
             </div>
-            AI Health Assistant
+            AI Assistant
           </h1>
           <p className="text-xs text-[var(--text-tertiary)] mt-0.5 ml-10">
             Powered by NVIDIA NIM · Personal BP context enabled
