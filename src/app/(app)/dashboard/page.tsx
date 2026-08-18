@@ -6,7 +6,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin, Sparkles, RefreshCw } from 'lucide-react';
+import { CheckCircle2, AlertCircle, Clock, TrendingUp, CalendarDays, Plus, Pin, Sparkles, RefreshCw, Volume2, VolumeX } from 'lucide-react';
 import { useReminderStore } from '@/stores/reminderStore';
 import { StatsCard } from '@/components/shared/StatsCard';
 import { ReminderCard } from '@/components/shared/ReminderCard';
@@ -14,6 +14,8 @@ import { EmptyState } from '@/components/shared/EmptyState';
 import { getGreeting, getCompletionRate } from '@/lib/utils';
 import { Button } from '@/components/ui/Button';
 import { useRouter } from 'next/navigation';
+import { SmartScheduleOptimizer } from '@/components/shared/SmartScheduleOptimizer';
+import { useTextToSpeech } from '@/hooks/useSpeech';
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell,
 } from 'recharts';
@@ -94,6 +96,9 @@ export default function DashboardPage() {
   const [briefingMood, setBriefingMood] = useState<'light' | 'moderate' | 'busy' | ''>('');
   const [briefingLoading, setBriefingLoading] = useState(false);
   const [briefingFetched, setBriefingFetched] = useState(false);
+
+  // TTS hook for audio briefing
+  const { speak, stop, speaking, supported: ttsSupported } = useTextToSpeech();
 
   const fetchBriefing = useCallback(async () => {
     if (briefingLoading || !mounted) return;
@@ -218,18 +223,34 @@ export default function DashboardPage() {
             </button>
           </div>
 
-          {briefingLoading && !briefing ? (
+            {briefingLoading && !briefing ? (
             <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)]">
               <div className="w-4 h-4 rounded-full border-2 border-[var(--accent)]/40 border-t-[var(--accent)] animate-spin" />
               AI is analyzing your day...
             </div>
           ) : briefing ? (
-            <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{briefing}</p>
+            <div className="space-y-2">
+              <p className="text-sm text-[var(--text-secondary)] leading-relaxed">{briefing}</p>
+              {ttsSupported && (
+                <button
+                  onClick={() => speaking ? stop() : speak(briefing)}
+                  className="flex items-center gap-1.5 text-xs text-[var(--text-tertiary)] hover:text-[var(--accent)] transition-colors"
+                  title={speaking ? 'Stop audio' : 'Play audio briefing'}
+                >
+                  {speaking ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                  {speaking ? 'Stop' : 'Listen'}
+                </button>
+              )}
+            </div>
           ) : (
             <p className="text-xs text-[var(--text-tertiary)] italic">Click refresh to get your AI daily briefing.</p>
           )}
         </motion.div>
       )}
+
+      {/* Smart Schedule Optimizer */}
+      {mounted && <SmartScheduleOptimizer />}
+
 
       {/* Stats Row */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">

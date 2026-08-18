@@ -17,6 +17,7 @@ import { CATEGORIES, PRIORITIES } from '@/constants';
 import { Priority, SortOption } from '@/types';
 import { cn } from '@/lib/utils';
 import { Dialog, DialogContent } from '@/components/ui/Dialog';
+import { PrescriptionScanner } from '@/components/shared/PrescriptionScanner';
 
 export default function RemindersPage() {
   const router = useRouter();
@@ -93,7 +94,7 @@ export default function RemindersPage() {
             Manage, filter, and organize all your reminders
           </p>
         </div>
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex items-center gap-2 w-full sm:w-auto flex-wrap">
           {reminders.length > 0 && (
             <Button
               variant="secondary"
@@ -103,6 +104,7 @@ export default function RemindersPage() {
               <Trash2 size={16} /> Delete All
             </Button>
           )}
+          <PrescriptionScanner />
           <Button onClick={() => router.push('/reminders/new')} className="flex-1 sm:flex-initial">
             <Plus size={16} /> New Reminder
           </Button>

@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, Bell, Calendar, History, Settings,
-  Trash2, User, ChevronLeft, ChevronRight, Plus, Heart, LogOut,
+  Trash2, User, ChevronLeft, ChevronRight, Plus, Heart, LogOut, Bot,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUiStore } from '@/stores/uiStore';
@@ -25,6 +25,7 @@ const NAV_GROUPS = [
       { href: '/reminders', label: 'Reminders', icon: Bell },
       { href: '/calendar', label: 'Calendar', icon: Calendar },
       { href: '/bp-tracker', label: 'BP Tracker', icon: Heart },
+      { href: '/ai-chat', label: 'AI Assistant', icon: Bot },
     ],
   },
   {

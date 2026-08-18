@@ -9,7 +9,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { LayoutDashboard, Bell, Heart, Settings, Plus } from 'lucide-react';
+import { LayoutDashboard, Bell, Heart, Bot, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const LEFT_ITEMS = [
@@ -18,7 +18,7 @@ const LEFT_ITEMS = [
 ];
 const RIGHT_ITEMS = [
   { href: '/bp-tracker', label: 'BP',        icon: Heart },
-  { href: '/settings',   label: 'Settings',  icon: Settings },
+  { href: '/ai-chat',   label: 'AI Chat',    icon: Bot },
 ];
 
 export function BottomNav() {

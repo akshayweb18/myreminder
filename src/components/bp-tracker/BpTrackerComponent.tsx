@@ -24,6 +24,8 @@ import {
 } from 'recharts';
 import { format, parseISO, subDays } from 'date-fns';
 import { BpAiInsights } from '@/components/bp-tracker/BpAiInsights';
+import { DoctorReport } from '@/components/bp-tracker/DoctorReport';
+import { MedicineInteractionAlert } from '@/components/bp-tracker/MedicineInteractionAlert';
 
 // ============================================================
 // Helpers
@@ -127,6 +129,9 @@ export default function BpTrackerComponent() {
   const [selectedMeds, setSelectedMeds] = useState<string[]>([]);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [interactionResult, setInteractionResult] = useState<any | null>(null);
+  const [checkingInteraction, setCheckingInteraction] = useState(false);
+  const [interactionMedName, setInteractionMedName] = useState('');
 
   // Edit state
   const [editingId, setEditingId]   = useState<string | null>(null);
@@ -253,10 +258,35 @@ export default function BpTrackerComponent() {
     }
   };
 
-  const handleMedSubmit = (e: React.FormEvent) => {
+  const handleMedSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!medName.trim()) return;
-    addMedicine(medName.trim(), medDosage.trim(), medFreq, medColor);
+    const name = medName.trim();
+    addMedicine(name, medDosage.trim(), medFreq, medColor);
+
+    // AI Check for interactions with existing active medicines
+    const activeMeds = medicines.filter(m => m.active).map(m => `${m.name} ${m.dosage}`);
+    if (activeMeds.length > 0) {
+      setCheckingInteraction(true);
+      setInteractionResult(null);
+      setInteractionMedName(name);
+      try {
+        const res = await fetch('/api/ai/medicine-interaction', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ newMedicine: name, existingMedicines: activeMeds }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          setInteractionResult(data);
+        }
+      } catch (err) {
+        console.error('Failed to check interactions:', err);
+      } finally {
+        setCheckingInteraction(false);
+      }
+    }
+
     setMedName(''); setMedDosage(''); setMedFreq('once-daily');
     setMedColor(MEDICINE_COLORS[0]); setShowMedForm(false);
   };
@@ -635,6 +665,7 @@ export default function BpTrackerComponent() {
             <Button variant="ghost" size="sm" onClick={generatePDF} title="Doctor PDF Report">
               <Printer size={14} /> PDF Report
             </Button>
+            <DoctorReport />
             <Button size="sm" onClick={() => { setShowForm(!showForm); setActiveTab('overview'); }}>
               <Plus size={14} /> Log Reading
             </Button>
@@ -1170,6 +1201,25 @@ export default function BpTrackerComponent() {
                     </div>
                   </form>
                 </motion.div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {checkingInteraction && (
+                <div className="flex items-center gap-2 text-xs text-[var(--text-tertiary)] py-1.5 px-3 rounded-xl bg-violet-500/10 border border-violet-500/20">
+                  <span className="h-3 w-3 rounded-full border-2 border-[var(--accent)] border-t-transparent animate-spin" />
+                  AI is checking for drug interactions with existing medicines...
+                </div>
+              )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+              {interactionResult && (
+                <MedicineInteractionAlert
+                  result={interactionResult}
+                  medicineName={interactionMedName}
+                  onDismiss={() => setInteractionResult(null)}
+                />
               )}
             </AnimatePresence>
 

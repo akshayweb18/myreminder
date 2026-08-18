@@ -1,4 +1,4 @@
-﻿'use client';
+'use client';
 
 // ============================================================
 // RemindMe — App Shell Layout (PWA Mobile-First)
@@ -10,6 +10,7 @@ import { TopBar } from './TopBar';
 import { CommandPalette } from './CommandPalette';
 import { useKeyboardShortcuts } from '@/hooks/useKeyboardShortcuts';
 import { useNotificationScheduler } from '@/hooks/useNotificationScheduler';
+import { VoiceAssistant } from '../shared/VoiceAssistant';
 
 interface AppShellProps {
   children: React.ReactNode;
@@ -46,6 +47,9 @@ export function AppShell({ children }: AppShellProps) {
 
       {/* Command Palette */}
       <CommandPalette />
+
+      {/* Global AI Voice Assistant */}
+      <VoiceAssistant />
     </div>
   );
 }
