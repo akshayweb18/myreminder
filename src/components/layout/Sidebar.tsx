@@ -93,7 +93,7 @@ export function Sidebar({ className }: SidebarProps) {
               </div>
               <div>
                 <p className="text-sm font-bold text-[var(--text-primary)] font-display leading-none">
-                  RemindMe
+                  RemindMe AI
                 </p>
               </div>
             </motion.div>

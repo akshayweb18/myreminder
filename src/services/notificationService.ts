@@ -1,4 +1,4 @@
-﻿// ============================================================
+// ============================================================
 // RemindMe — Local Notification Service (No server needed)
 // Uses browser Notification API + setTimeout scheduling
 // ============================================================
@@ -29,6 +29,27 @@ export function getNotificationPermission(): NotificationPermission | 'unsupport
 // ============================================================
 function fireNotification(reminder: Reminder) {
   if (typeof window === 'undefined' || Notification.permission !== 'granted') return;
+
+  // 🔊 Audio Voice Reminder (TTS)
+  if ('speechSynthesis' in window) {
+    try {
+      window.speechSynthesis.cancel(); // Clear any ongoing speech
+      const textToSpeak = `Reminder: ${reminder.title}. ${reminder.description || ''}`;
+      const utterance = new SpeechSynthesisUtterance(textToSpeak);
+      utterance.lang = 'en-IN';
+      utterance.rate = 0.95;
+
+      const voices = window.speechSynthesis.getVoices();
+      const preferred = voices.find(v =>
+        v.lang.includes('en-IN') || v.name.includes('India') || v.name.includes('Rishi')
+      ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+      if (preferred) utterance.voice = preferred;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      console.warn('Speech synthesis failed:', e);
+    }
+  }
 
   const notif = new Notification(reminder.title, {
     body: reminder.description || (reminder.date + (reminder.time ? ' at ' + reminder.time : '')),

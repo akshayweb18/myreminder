@@ -47,7 +47,7 @@ export function TopBar({ className }: TopBarProps) {
   const mounted   = useIsMounted();
   const [showNotifications, setShowNotifications] = useState(false);
 
-  const title        = PAGE_TITLES[pathname] ?? 'RemindMe';
+  const title        = PAGE_TITLES[pathname] ?? 'RemindMe AI';
   const overdueCount = mounted ? getOverdueReminders().length : 0;
   const isDetail     = DETAIL_PAGES.some((p) => pathname.startsWith(p));
 

@@ -95,7 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '150ms' }} />
             <div className="h-1.5 w-1.5 rounded-full bg-[var(--accent)] animate-bounce" style={{ animationDelay: '300ms' }} />
           </div>
-          <p className="text-xs text-[var(--text-tertiary)]">Loading RemindMe...</p>
+          <p className="text-xs text-[var(--text-tertiary)]">Loading RemindMe AI...</p>
         </div>
       </div>
     );
@@ -137,7 +137,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                     Confirm Log Out
                   </h3>
                   <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed max-w-xs">
-                    Are you sure you want to log out of RemindMe? You will need to log back in to sync your reminders.
+                    Are you sure you want to log out of RemindMe AI? You will need to log back in to sync your reminders.
                   </p>
                 </div>
                 

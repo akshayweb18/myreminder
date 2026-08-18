@@ -17,11 +17,11 @@ const outfit = Outfit({
 
 export const metadata: Metadata = {
   title: {
-    default: 'RemindMe — Remember Everything. Forget Nothing.',
-    template: '%s | RemindMe',
+    default: 'RemindMe AI — Remember Everything. Forget Nothing.',
+    template: '%s | RemindMe AI',
   },
   description:
-    'RemindMe is a world-class reminder application with premium UX, smart scheduling, and beautiful design. Never miss what matters.',
+    'RemindMe AI is a world-class reminder application with premium UX, smart scheduling, and beautiful design. Never miss what matters.',
   keywords: [
     'reminder',
     'reminder app',
@@ -31,23 +31,23 @@ export const metadata: Metadata = {
     'PWA',
     'AI reminders',
   ],
-  authors: [{ name: 'RemindMe' }],
-  creator: 'RemindMe',
+  authors: [{ name: 'RemindMe AI' }],
+  creator: 'RemindMe AI',
   manifest: '/manifest.json',
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
-    title: 'RemindMe',
+    title: 'RemindMe AI',
   },
   openGraph: {
     type: 'website',
-    title: 'RemindMe — Remember Everything. Forget Nothing.',
+    title: 'RemindMe AI — Remember Everything. Forget Nothing.',
     description: 'A world-class reminder PWA with premium UX and smart scheduling.',
-    siteName: 'RemindMe',
+    siteName: 'RemindMe AI',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'RemindMe',
+    title: 'RemindMe AI',
     description: 'Remember Everything. Forget Nothing.',
   },
   icons: {

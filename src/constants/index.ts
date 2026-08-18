@@ -167,7 +167,7 @@ export const STORAGE_KEYS = {
 // ============================================================
 
 export const APP_INFO = {
-  name: 'RemindMe',
+  name: 'RemindMe AI',
   tagline: 'Remember Everything. Forget Nothing.',
   version: '1.0.0',
   description: 'A world-class reminder application with premium UX.',
