@@ -13,6 +13,7 @@ import {
   Loader2, User,
 } from 'lucide-react';
 import { useBpStore } from '@/stores/bpStore';
+import { useReminderStore } from '@/stores/reminderStore';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 
@@ -56,6 +57,7 @@ export default function AiChatPage() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const { readings, medicines, goal } = useBpStore();
+  const { addReminder } = useReminderStore();
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -111,7 +113,22 @@ export default function AiChatPage() {
       });
 
       if (!res.ok) throw new Error();
-      const { reply } = await res.json();
+      const data = await res.json();
+      const { reply, action } = data;
+
+      if (action && action.type === 'create_reminder' && action.reminder) {
+        const r = action.reminder;
+        addReminder({
+          title: r.title,
+          description: r.description || 'Created via AI Assistant',
+          date: r.date,
+          time: r.time || undefined,
+          priority: r.priority || 'medium',
+          categoryId: r.categoryId || 'personal',
+          emoji: r.emoji || '📅',
+          checklist: [],
+        });
+      }
 
       const aiMsg: Message = {
         id: `ai-${Date.now()}`,

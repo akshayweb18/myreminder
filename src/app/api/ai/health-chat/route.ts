@@ -6,7 +6,8 @@
 // ============================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { nvidiaChat, NvidiaMessage } from '@/lib/nvidia';
+import { nvidiaChat, NvidiaMessage, parseJsonFromAI } from '@/lib/nvidia';
+import { format } from 'date-fns';
 
 interface BpReadingInput {
   systolic: number;
@@ -49,23 +50,44 @@ export async function POST(req: NextRequest) {
 
     const activeMeds = medicines.filter(m => m.active).map(m => `${m.name} ${m.dosage} (${m.frequency})`).join(', ');
 
-    const systemPrompt = `You are a friendly, highly intelligent, general-purpose AI assistant for the RemindMe AI app.
-You can answer ANY question the user asks, including general knowledge, writing tasks, daily life questions, brainstorming, coding, and medical or health concerns.
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const tomorrow = format(new Date(Date.now() + 86400000), 'yyyy-MM-dd');
 
-USER'S HEALTH DATA (Reference this ONLY if the user asks about their health, blood pressure, or medications):
+    const systemPrompt = `You are a friendly, highly intelligent AI assistant for the RemindMe AI app.
+You can answer ANY question the user asks.
+
+Today's date is ${today}. Tomorrow is ${tomorrow}.
+
+If the user wants to create/schedule a reminder or task (e.g. "Remind me to call John tomorrow", "Remind me to take medicine at 8pm", "Meeting add karo 9 am tomorrow", etc.), you should recognize this intent and include an action object in your response.
+
+You MUST return ONLY a valid JSON object matching this structure:
+{
+  "reply": "your text response to the user. Explain clearly that you have scheduled the reminder for them.",
+  "action": null | {
+    "type": "create_reminder",
+    "reminder": {
+      "title": "short reminder title (max 50 chars)",
+      "date": "YYYY-MM-DD",
+      "time": "HH:MM (24h format, or null if no time specified)",
+      "priority": "low | medium | high | urgent",
+      "categoryId": "health | work | personal | finance | shopping | travel | fitness",
+      "emoji": "single relevant emoji",
+      "description": "optional description"
+    }
+  }
+}
+
+USER'S HEALTH DATA (Only use if they ask about health/BP):
 - Total BP Readings: ${readings.length}
 - Average BP: ${avgSys ?? 'No data'}/${avgDia ?? 'No data'} mmHg
 - Current Medications: ${activeMeds || 'None'}
 - BP Goal: ${goal ? `${goal.systolic}/${goal.diastolic} mmHg` : 'Not set'}
-- Recent Readings (last 10):
-${recentReadings || 'No readings yet'}
 
-GUIDELINES:
-1. Be extremely helpful, engaging, and conversational.
-2. Answer in the same language as the user (Hindi/Hinglish/English/etc.).
-3. You are fully capable of general knowledge, writing emails, coding, planning schedules, telling jokes, or just casual chatting.
-4. IF AND ONLY IF the user asks specifically about their health/BP, reference their health data and append a friendly warning: "Apne doctor se zaroor milein" / "Consult your doctor". Do NOT add this disclaimer for non-health/general chats.
-5. Keep responses concise, clear, and friendly with emojis.`;
+Rules:
+1. Always reply in the same language as the user (Hindi/Hinglish/English).
+2. Keep responses warm and engaging.
+3. If they ask a general question (e.g. "Tell me a joke"), set action to null and answer it in "reply".
+4. Never include markdown fences (like \`\`\`json) in the response. Return raw JSON.`;
 
     const messages: NvidiaMessage[] = [
       { role: 'system', content: systemPrompt },
@@ -73,9 +95,28 @@ GUIDELINES:
       { role: 'user', content: message },
     ];
 
-    const reply = await nvidiaChat(messages, { temperature: 0.6, max_tokens: 400 });
+    const raw = await nvidiaChat(messages, { temperature: 0.3, max_tokens: 500 });
 
-    return NextResponse.json({ reply: reply.trim() });
+    try {
+      const parsed = parseJsonFromAI<{
+        reply: string;
+        action?: {
+          type: 'create_reminder';
+          reminder: {
+            title: string;
+            date: string;
+            time?: string;
+            priority: 'low' | 'medium' | 'high' | 'urgent';
+            categoryId: string;
+            emoji?: string;
+            description?: string;
+          };
+        };
+      }>(raw);
+      return NextResponse.json(parsed);
+    } catch {
+      return NextResponse.json({ reply: raw.trim() });
+    }
   } catch (err) {
     console.error('[AI health-chat]', err);
     return NextResponse.json({ error: 'Chat response failed' }, { status: 500 });

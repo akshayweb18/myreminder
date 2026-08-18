@@ -28,7 +28,7 @@ const PAGE_TITLES: Record<string, string> = {
   '/trash':         'Trash',
   '/settings':      'Settings',
   '/profile':       'Profile',
-  '/ai-chat':       'AI Health Assistant',
+  '/ai-chat':       'AI Assistant',
 };
 
 // Pages that should show a back-chevron instead of logo on mobile
